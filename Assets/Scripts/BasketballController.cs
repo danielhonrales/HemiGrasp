@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Oculus.Interaction.Input;
 using UnityEngine;
@@ -8,6 +9,7 @@ public class BasketballController : MonoBehaviour
 
     public BallState state;
     public Rigidbody rb;
+    public GameController gameController;
 
 
     private float pushDownForce = 8f;
@@ -23,6 +25,8 @@ public class BasketballController : MonoBehaviour
     private GameObject rightHand;
     private HashSet<GameObject> handsColliding = new HashSet<GameObject>();
 
+    private int motorSpeed = 200;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -36,6 +40,7 @@ public class BasketballController : MonoBehaviour
         rightHand = GameObject.Find("RightHandAnchor");
 
         state = BallState.Idle;
+        gameController = GameObject.Find("GameController").GetComponent<GameController>();
     }
 
     // Update is called once per frame
@@ -49,7 +54,7 @@ public class BasketballController : MonoBehaviour
             case BallState.Hold:
                 Vector3 holdPos = GetHoldPos(leftHand.transform.position, rightHand.transform.position);
                 if (!dribbling) {
-                    if (handsColliding.Count == 2) {
+                    if (handsColliding.Count >= 1) {
                         transform.position = holdPos;
                         rb.constraints = RigidbodyConstraints.FreezeAll;
                     }
@@ -93,6 +98,9 @@ public class BasketballController : MonoBehaviour
         {
             rb.AddForce(Vector3.up * bounceForce, ForceMode.VelocityChange);
             dribbling = false;
+            gameController.WriteToSerial(string.Format("T,{0},{1}", 100, motorSpeed));
+            gameController.WriteToSerial(string.Format("M,{0},{1}", 100, motorSpeed));
+            gameController.WriteToSerial(string.Format("L,{0},{1}", 100, motorSpeed));
         }
     }
 
@@ -116,6 +124,10 @@ public class BasketballController : MonoBehaviour
         {
             state = BallState.Hold;
         }
+
+        gameController.WriteToSerial(string.Format("T,{0},{1}", (int)Math.Round(transform.localScale.y / maxScale * 100), motorSpeed));
+        gameController.WriteToSerial(string.Format("M,{0},{1}", (int)Math.Round(transform.localScale.x / maxScale * 100), motorSpeed));
+        gameController.WriteToSerial(string.Format("L,{0},{1}", (int)Math.Round(transform.localScale.y / maxScale * 100), motorSpeed));
     }   
 
     public void Dribble()
@@ -126,6 +138,10 @@ public class BasketballController : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.linearVelocity = Vector3.zero;
         rb.AddForce(Vector3.down * pushDownForce, ForceMode.VelocityChange);
+
+        gameController.WriteToSerial(string.Format("T,{0},{1}", 0, motorSpeed));
+        gameController.WriteToSerial(string.Format("M,{0},{1}", 0, motorSpeed));
+        gameController.WriteToSerial(string.Format("L,{0},{1}", 0, motorSpeed));
     }
 
     public void Shoot(Vector3 leftPos, Vector3 rightPos)
@@ -138,5 +154,9 @@ public class BasketballController : MonoBehaviour
         rb.constraints = RigidbodyConstraints.None;
         rb.linearVelocity = Vector3.zero;
         rb.AddForce(shootDir * pushDownForce, ForceMode.VelocityChange);
+
+        gameController.WriteToSerial(string.Format("T,{0},{1}", 0, motorSpeed));
+        gameController.WriteToSerial(string.Format("M,{0},{1}", 0, motorSpeed));
+        gameController.WriteToSerial(string.Format("L,{0},{1}", 0, motorSpeed));
     }
 }
