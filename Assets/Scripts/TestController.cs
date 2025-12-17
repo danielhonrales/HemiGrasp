@@ -1,0 +1,93 @@
+using System.Collections.Generic;
+using Oculus.Interaction.Input;
+using Unity.VisualScripting;
+using UnityEngine;
+
+public class TestController : MonoBehaviour
+{
+
+    [Header("SphereControl"), Space(10)]
+    public HandMode mode;
+    [Range(0f, 2f)]
+    public float radiusChange;
+
+    [Header("Calibration"), Space(10)]
+    public Vector3 calibOffsetOneHand;
+    public Vector3 calibOffsetTwoHand;
+
+    [Header("References"), Space(10)]
+    public GameObject sphere;
+
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        radiusChange = Mathf.Round(radiusChange * 10f) / 10f;
+        ScaleSphere();
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            CalibrateSphere();
+        }
+    }
+
+    public void ScaleSphere()
+    {
+        float scaleVal = changeMapping[radiusChange];
+        sphere.transform.localScale = new Vector3(scaleVal, scaleVal, scaleVal);
+    }
+
+    public void CalibrateSphere()
+    {
+        if (mode == HandMode.OneHand)
+        {
+            Vector3 handPos = GameObject.Find("Joint RightHandWrist").transform.position;
+            sphere.transform.position = handPos + calibOffsetOneHand;
+        } else
+        {
+            Vector3 leftHandPos = GameObject.Find("Joint LeftHandWrist").transform.position;
+            Vector3 rightHandPos = GameObject.Find("Joint RightHandWrist").transform.position;
+            sphere.transform.position = ((leftHandPos + rightHandPos) / 2) + calibOffsetTwoHand;
+        }
+    }
+
+    public enum HandMode
+    {
+        OneHand,
+        TwoHand
+    }
+
+    public Dictionary<float, float> changeMapping = new()
+    {
+        {0.00f, 0.1258f},
+        {0.10f, 0.1278f},
+        {0.20f, 0.1298f},
+        {0.25f, 0.1308f},
+        {0.30f, 0.1318f},
+        {0.40f, 0.1338f},
+        {0.50f, 0.1358f},
+        {0.60f, 0.1378f},
+        {0.70f, 0.1398f},
+        {0.75f, 0.1408f},
+        {0.80f, 0.1418f},
+        {0.90f, 0.1438f},
+        {1.00f, 0.1458f},
+        {1.10f, 0.1478f},
+        {1.20f, 0.1498f},
+        {1.25f, 0.1508f},
+        {1.30f, 0.1518f},
+        {1.40f, 0.1538f},
+        {1.50f, 0.1558f},
+        {1.60f, 0.1578f},
+        {1.70f, 0.1598f},
+        {1.75f, 0.1608f},
+        {1.80f, 0.1618f},
+        {1.90f, 0.1638f},
+        {2.00f, 0.1658f},
+    };
+}
