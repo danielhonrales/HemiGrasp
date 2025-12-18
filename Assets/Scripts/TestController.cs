@@ -9,7 +9,9 @@ public class TestController : MonoBehaviour
     [Header("SphereControl"), Space(10)]
     public HandMode mode;
     [Range(0f, 2f)]
-    public float radiusChange;
+    public float visualRadiusChange;
+    [Range(0f, 2f)]
+    public float physicalRadiusChange;
 
     [Header("Calibration"), Space(10)]
     public Vector3 calibOffsetOneHand;
@@ -17,6 +19,7 @@ public class TestController : MonoBehaviour
 
     [Header("References"), Space(10)]
     public GameObject sphere;
+    public SerialController serialController;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -27,22 +30,22 @@ public class TestController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        radiusChange = Mathf.Round(radiusChange * 10f) / 10f;
-        ScaleSphere();
+        visualRadiusChange = Mathf.Round(visualRadiusChange * 10f) / 10f;
+        ScaleVisual();
 
         if (Input.GetKeyDown(KeyCode.C))
         {
-            CalibrateSphere();
+            CalibrateVisual();
         }
     }
 
-    public void ScaleSphere()
+    public void ScaleVisual()
     {
-        float scaleVal = changeMapping[radiusChange];
+        float scaleVal = changeMapping[visualRadiusChange];
         sphere.transform.localScale = new Vector3(scaleVal, scaleVal, scaleVal);
     }
 
-    public void CalibrateSphere()
+    public void CalibrateVisual()
     {
         if (mode == HandMode.OneHand)
         {
@@ -54,6 +57,11 @@ public class TestController : MonoBehaviour
             Vector3 rightHandPos = GameObject.Find("Joint RightHandWrist").transform.position;
             sphere.transform.position = ((leftHandPos + rightHandPos) / 2) + calibOffsetTwoHand;
         }
+    }
+
+    public void ScalePhysical()
+    {
+        //serialController.doThing(radius)
     }
 
     public enum HandMode
