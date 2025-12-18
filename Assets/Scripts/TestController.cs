@@ -1,12 +1,15 @@
+using System;
 using System.Collections.Generic;
 using Oculus.Interaction.Input;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class TestController : MonoBehaviour
 {
 
-    [Header("SphereControl"), Space(10)]
+    [Header("TestControl"), Space(10)]
+    public int trialNumber;
     public HandMode mode;
     [Range(0f, 2f)]
     public float visualRadiusChange;
@@ -32,10 +35,33 @@ public class TestController : MonoBehaviour
     {
         visualRadiusChange = Mathf.Round(visualRadiusChange * 10f) / 10f;
         ScaleVisual();
+        physicalRadiusChange = Mathf.Round(physicalRadiusChange * 10f) / 10f;
 
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ScalePhysical();
+        }
+            if (Input.GetKeyDown(KeyCode.C))
         {
             CalibrateVisual();
+        }
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            visualRadiusChange = Math.Min(visualRadiusChange + 0.2f, 2.0f);
+            ScaleVisual();
+        }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            visualRadiusChange = Math.Max(visualRadiusChange - 0.2f, 0.0f);
+            ScaleVisual();
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            physicalRadiusChange = Math.Min(physicalRadiusChange + 0.2f, 2.0f);
+        }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            physicalRadiusChange = Math.Max(physicalRadiusChange - 0.2f, 0.0f);
         }
     }
 
@@ -61,7 +87,7 @@ public class TestController : MonoBehaviour
 
     public void ScalePhysical()
     {
-        //serialController.doThing(radius)
+        serialController.GoTo((int)(physicalRadiusChange / 2f * 100));
     }
 
     public enum HandMode
