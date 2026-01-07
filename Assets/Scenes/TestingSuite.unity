@@ -1119,8 +1119,8 @@ MonoBehaviour:
   mode: 0
   visualRadiusChange: 0
   physicalRadiusChange: 0
-  calibOffsetOneHand: {x: 0, y: 0, z: 0}
-  calibOffsetTwoHand: {x: 0, y: 0, z: 0}
+  calibOffsetOneHand: {x: 0, y: -0.06, z: 0.03}
+  calibOffsetTwoHand: {x: 0, y: 0, z: 0.03}
   sphere: {fileID: 2116133114}
   serialController: {fileID: 1168516024}
 --- !u!4 &1168516023
@@ -1166,7 +1166,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d857f83b1bc59c45b90c36371522f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fileName: p1
+  pid: 1
+  technique: 0
+  fixedFactor: 0
+  startDirection: 0
+  currentTrial: 1
+  baseFolder: Assets/data/p_sheets
+  csvPath: 
+  testController: {fileID: 1168516022}
 --- !u!1001 &1327887893
 PrefabInstance:
   m_ObjectHideFlags: 0

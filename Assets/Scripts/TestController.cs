@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Oculus.Interaction.Input;
 using Unity.VisualScripting;
@@ -33,35 +34,36 @@ public class TestController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        visualRadiusChange = Mathf.Round(visualRadiusChange * 10f) / 10f;
+        visualRadiusChange = Mathf.Round(visualRadiusChange * 20f) / 20f;
         ScaleVisual();
-        physicalRadiusChange = Mathf.Round(physicalRadiusChange * 10f) / 10f;
+        physicalRadiusChange = Mathf.Round(physicalRadiusChange * 20f) / 20f;
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            ScaleVisual();
             ScalePhysical();
         }
-            if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C))
         {
             CalibrateVisual();
         }
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            visualRadiusChange = Math.Min(visualRadiusChange + 0.2f, 2.0f);
+            visualRadiusChange = Math.Min(visualRadiusChange + 0.1f, 2.0f);
             ScaleVisual();
         }
         if (Input.GetKeyDown(KeyCode.A))
         {
-            visualRadiusChange = Math.Max(visualRadiusChange - 0.2f, 0.0f);
+            visualRadiusChange = Math.Max(visualRadiusChange - 0.1f, 0.0f);
             ScaleVisual();
         }
         if (Input.GetKeyDown(KeyCode.E))
         {
-            physicalRadiusChange = Math.Min(physicalRadiusChange + 0.2f, 2.0f);
+            physicalRadiusChange = Math.Min(physicalRadiusChange + 0.1f, 2.0f);
         }
         if (Input.GetKeyDown(KeyCode.D))
         {
-            physicalRadiusChange = Math.Max(physicalRadiusChange - 0.2f, 0.0f);
+            physicalRadiusChange = Math.Max(physicalRadiusChange - 0.1f, 0.0f);
         }
     }
 
@@ -75,12 +77,13 @@ public class TestController : MonoBehaviour
     {
         if (mode == HandMode.OneHand)
         {
-            Vector3 handPos = GameObject.Find("Joint RightHandWrist").transform.position;
+
+            Vector3 handPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
             sphere.transform.position = handPos + calibOffsetOneHand;
         } else
         {
-            Vector3 leftHandPos = GameObject.Find("Joint LeftHandWrist").transform.position;
-            Vector3 rightHandPos = GameObject.Find("Joint RightHandWrist").transform.position;
+            Vector3 leftHandPos = GameObject.Find("[BuildingBlock] Hand Tracking left").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
+            Vector3 rightHandPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
             sphere.transform.position = ((leftHandPos + rightHandPos) / 2) + calibOffsetTwoHand;
         }
     }
@@ -88,6 +91,22 @@ public class TestController : MonoBehaviour
     public void ScalePhysical()
     {
         serialController.GoTo((int)(physicalRadiusChange / 2f * 100));
+    }
+
+    public void AlertEnd()
+    {
+        StartCoroutine(AlertEndHelper());
+    }
+    private IEnumerator AlertEndHelper()
+    {
+        Color originalColor = sphere.GetComponent<Renderer>().material.color;
+        for (int i = 0; i < 3; i++)
+        {
+            sphere.GetComponent<Renderer>().material.color = Color.red;
+            yield return new WaitForSeconds(0.3f);
+            sphere.GetComponent<Renderer>().material.color = originalColor;
+            yield return new WaitForSeconds(0.3f);
+        }
     }
 
     public enum HandMode
