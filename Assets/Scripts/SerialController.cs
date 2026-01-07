@@ -86,7 +86,7 @@ public class SerialController : MonoBehaviour
 
     // ---------------- MAIN LOGIC ----------------
 
-    public void GoTo(int location, bool calibration = false)
+    public void GoTo(int location, bool calibration = true)
     {
         SendCmd("START");
 
