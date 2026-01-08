@@ -175,7 +175,7 @@ public class DataController : MonoBehaviour
             }
         }
 
-        if (reversalCount >= 2)
+        if (reversalCount >= 10)
         {
             staircaseDirections[currentStaircase] = -1;
             return true;
@@ -189,7 +189,7 @@ public class DataController : MonoBehaviour
         csvData[currentTrial][dataIndex["response"]] = response.ToString();
 
         string currentStaircase = csvData[currentTrial][dataIndex["staircase"]];
-        if (response != staircaseDirections[currentStaircase])
+        if (response == staircaseDirections[currentStaircase])
         {
             staircaseDirections[currentStaircase] = (staircaseDirections[currentStaircase] == 0) ? 1 : 0;
             csvData[currentTrial][dataIndex["reversal"]] = 1.ToString();
