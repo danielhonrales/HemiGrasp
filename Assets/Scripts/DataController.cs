@@ -122,6 +122,10 @@ public class DataController : MonoBehaviour
 
         testController.visualRadiusChange = float.Parse(csvData[currentTrial][dataIndex["visualSize"]]);
         testController.physicalRadiusChange = float.Parse(csvData[currentTrial][dataIndex["volumeSize"]]);
+
+        testController.sphere.SetActive(true);
+        testController.ScaleVisual();
+        testController.ScalePhysical();
     }
 
     private int GetPrevStaircaseTrial()
@@ -201,6 +205,7 @@ public class DataController : MonoBehaviour
         }
 
         SaveData();
+        testController.sphere.SetActive(false);
     }
     
     private float GetStepValue(int staircaseDirection)

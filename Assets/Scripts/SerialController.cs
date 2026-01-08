@@ -2,6 +2,7 @@ using System;
 using System.IO.Ports;
 using System.Threading;
 using UnityEngine;
+using System.Collections;
 
 public class SerialController : MonoBehaviour
 {
@@ -105,10 +106,11 @@ public class SerialController : MonoBehaviour
         }
 
         SendCmd($"{activeMotor},{location}");
-        Thread.Sleep(1000);
+        //Thread.Sleep(1000);
 
-        SendCmd("STOP");
-        SendCmd("POS");
+        //SendCmd("STOP");
+        //SendCmd("POS");
+        StartCoroutine(Helper());
 
         if (GetPosAndError(location, out float m, out float t, out float l,
                                          out float mErr, out float tErr, out float lErr))
@@ -125,6 +127,11 @@ public class SerialController : MonoBehaviour
         {
             Debug.LogWarning("Failed to read position");
         }
+    }
+
+    public IEnumerator Helper() {
+        yield return new WaitForSeconds(1);
+        SendCmd("STOP");
     }
 
     // ---------------- INPUT HELPERS ----------------

@@ -26,10 +26,12 @@ public class TestController : MonoBehaviour
     public SerialController serialController;
     public DataController dataController;
 
+    private float originalOffsety;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        originalOffsety = calibOffsetOneHand.y;
     }
 
     // Update is called once per frame
@@ -66,14 +68,20 @@ public class TestController : MonoBehaviour
         {
             physicalRadiusChange = Math.Max(physicalRadiusChange - 0.1f, 0.0f);
         }
+
+        Vector3 handPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
+        sphere.transform.position = new Vector3(handPos.x + calibOffsetOneHand.x, handPos.y + calibOffsetOneHand.y, handPos.z + calibOffsetOneHand.z);
     }
 
     public void ScaleVisual()
     {
+        calibOffsetOneHand.y = originalOffsety;
+
         float scaleVal = changeMapping[visualRadiusChange];
         sphere.transform.localScale = new Vector3(scaleVal, scaleVal, scaleVal);
         if (dataController.fixedFactor == DataController.FixedFactor.fixedVolume) {
-            sphere.transform.localPosition = new Vector3(homePos.x, homePos.y - (changeMapping[visualRadiusChange] - 0.1258f), homePos.z);
+            //sphere.transform.localPosition = new Vector3(homePos.x, homePos.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f, homePos.z);
+            calibOffsetOneHand.y = calibOffsetOneHand.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f;
         }
     }
 
@@ -95,6 +103,11 @@ public class TestController : MonoBehaviour
 
     public void ScalePhysical()
     {
+        serialController.GoTo(0);
+        StartCoroutine(PhysicalHelper());
+    }
+    public IEnumerator PhysicalHelper() {
+        yield return new WaitForSeconds(1);
         serialController.GoTo((int)(physicalRadiusChange / 2f * 100));
         if (dataController.fixedFactor == DataController.FixedFactor.fixedVisual) {
             sphere.transform.localPosition = new Vector3(homePos.x, homePos.y + (changeMapping[physicalRadiusChange] - 0.1258f) / 2, homePos.z);
@@ -104,7 +117,7 @@ public class TestController : MonoBehaviour
     public void AlertEnd()
     {
         StartCoroutine(AlertEndHelper());
-    }
+    } 
     private IEnumerator AlertEndHelper()
     {
         Color originalColor = sphere.GetComponent<Renderer>().material.color;

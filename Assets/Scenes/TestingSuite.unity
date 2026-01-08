@@ -1118,7 +1118,7 @@ MonoBehaviour:
   trialNumber: 1
   visualRadiusChange: 0
   physicalRadiusChange: 0
-  calibOffsetOneHand: {x: 0, y: -0.06, z: 0.03}
+  calibOffsetOneHand: {x: -0.02, y: -0.065, z: 0.03}
   calibOffsetTwoHand: {x: 0, y: 0, z: 0.03}
   homePos: {x: 0, y: 0, z: 0}
   sphere: {fileID: 2116133114}
@@ -1151,7 +1151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c13f54512a96d5a459480d06b5f2e9d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  portName: COM14
+  portName: COM6
   baudRate: 115200
   errorWarning: 50
   activeMotor: A
@@ -1167,9 +1167,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d857f83b1bc59c45b90c36371522f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pid: 1
+  pid: 2
   technique: 0
-  fixedFactor: 0
+  fixedFactor: 1
   currentTrial: 1
   baseFolder: Assets/data/p_sheets
   csvPath: 
