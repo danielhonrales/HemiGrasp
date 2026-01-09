@@ -126,7 +126,7 @@ public class CongruencyDataController : MonoBehaviour
     public void RecordResponse(int response)
     {
         Debug.Log($"Recording {response} for trial {currentTrial}");
-        csvData[currentTrial][dataIndex["congurent"]] = response.ToString();
+        csvData[currentTrial][dataIndex["congruent"]] = response.ToString();
 
         SaveData();
         testController.sphere.SetActive(false);
