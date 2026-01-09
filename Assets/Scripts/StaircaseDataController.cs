@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-public class DataController : MonoBehaviour
+public class StaircaseDataController : MonoBehaviour
 {
     // Base path to participant folders
 

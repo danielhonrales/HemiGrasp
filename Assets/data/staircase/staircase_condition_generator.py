@@ -1,4 +1,5 @@
 import itertools
+import random
 import pandas as pd
 import os
 
@@ -32,8 +33,13 @@ def generate_participant_sheets(pid, num_trials):
 
         trials = []
 
+        staircases = ["A"] * (num_trials // 2) + ["B"] * (num_trials // 2)
+        if num_trials % 2 != 0:
+            staircases.append(random.choice(["A", "B"]))  # if odd
+        random.shuffle(staircases)
         for trial_num in range(0, num_trials):
-            staircase_label = "A" if trial_num % 2 == 0 else "B"
+            staircase_label = staircases[trial_num]
+            
             trial = {
                 'pid': pid,
                 'trial': trial_num,

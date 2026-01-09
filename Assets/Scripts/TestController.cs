@@ -24,7 +24,7 @@ public class TestController : MonoBehaviour
     [Header("References"), Space(10)]
     public GameObject sphere;
     public SerialController serialController;
-    public DataController dataController;
+    public CongruencyDataController dataController;
 
     private float originalOffsety;
 
@@ -79,17 +79,16 @@ public class TestController : MonoBehaviour
 
         float scaleVal = changeMapping[visualRadiusChange];
         sphere.transform.localScale = new Vector3(scaleVal, scaleVal, scaleVal);
-        if (dataController.fixedFactor == DataController.FixedFactor.fixedVolume) {
+        //if (dataController.fixedFactor == CongruencyDataController.FixedFactor.fixedVolume) {
             //sphere.transform.localPosition = new Vector3(homePos.x, homePos.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f, homePos.z);
-            calibOffsetOneHand.y = calibOffsetOneHand.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f;
-        }
+        calibOffsetOneHand.y = calibOffsetOneHand.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f;
+        //}
     }
 
     public void CalibrateVisual()
     {
-        if (dataController.technique == DataController.Technique.oneHand)
+        if (dataController.technique == CongruencyDataController.Technique.oneHand)
         {
-
             Vector3 handPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
             sphere.transform.position = handPos + calibOffsetOneHand;
         } else
@@ -109,9 +108,9 @@ public class TestController : MonoBehaviour
     public IEnumerator PhysicalHelper() {
         yield return new WaitForSeconds(1);
         serialController.GoTo((int)(physicalRadiusChange / 2f * 100));
-        if (dataController.fixedFactor == DataController.FixedFactor.fixedVisual) {
-            sphere.transform.localPosition = new Vector3(homePos.x, homePos.y + (changeMapping[physicalRadiusChange] - 0.1258f) / 2, homePos.z);
-        }
+        //if (dataController.fixedFactor == IDataController.FixedFactor.fixedVisual) {
+        sphere.transform.localPosition = new Vector3(homePos.x, homePos.y + (changeMapping[physicalRadiusChange] - 0.1258f) / 2, homePos.z);
+        //}
     }
 
     public void AlertEnd()
