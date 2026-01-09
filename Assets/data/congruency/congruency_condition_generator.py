@@ -6,11 +6,11 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-physical_size = [0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
-visual_size   = [0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
+physical_size = [0, 0.5, 1.0, 1.5, 2.0]
+visual_size   = [0, 0.5, 1.0, 1.5, 2.0]
 
 num_participants = 12
-repetitions = 3  # per condition
+repetitions = 5  # per condition
 
 # Output base folder
 output_base = 'Assets\\data\\congruency\\p_sheets'
