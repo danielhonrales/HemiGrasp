@@ -129,6 +129,10 @@ public class SerialController : MonoBehaviour
         }
     }
 
+    public void StopPID() {
+        SendCmd("STOP");
+    }
+
     public IEnumerator Helper() {
         yield return new WaitForSeconds(1);
         SendCmd("STOP");

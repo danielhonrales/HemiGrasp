@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Oculus.Interaction.Input;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -20,6 +21,7 @@ public class TestController : MonoBehaviour
     public Vector3 calibOffsetOneHand;
     public Vector3 calibOffsetTwoHand;
     public Vector3 homePos;
+    public bool tracking;
 
     [Header("References"), Space(10)]
     public GameObject sphere;
@@ -27,11 +29,13 @@ public class TestController : MonoBehaviour
     public CongruencyDataController dataController;
 
     private float originalOffsety;
+    private Transform hand;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         originalOffsety = calibOffsetOneHand.y;
+        hand = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal");
     }
 
     // Update is called once per frame
@@ -43,8 +47,7 @@ public class TestController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ScaleVisual();
-            ScalePhysical();
+            ScaleAll();
         }
         if (Input.GetKeyDown(KeyCode.C))
         {
@@ -69,19 +72,34 @@ public class TestController : MonoBehaviour
             physicalRadiusChange = Math.Max(physicalRadiusChange - 0.1f, 0.0f);
         }
 
-        Vector3 handPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
-        sphere.transform.position = new Vector3(handPos.x + calibOffsetOneHand.x, handPos.y + calibOffsetOneHand.y, handPos.z + calibOffsetOneHand.z);
+        if (tracking)
+            sphere.transform.position = new Vector3(hand.position.x + calibOffsetOneHand.x, hand.position.y + calibOffsetOneHand.y, hand.position.z + calibOffsetOneHand.z);
+    }
+
+    private void OnApplicationQuit() {
+        serialController.GoTo(0);
+        Thread.Sleep(1000);
+        serialController.StopPID();
+    }
+
+    public void ScaleAll() {
+        ScaleVisual();
+        ScalePhysical();
+
+        sphere.transform.position = homePos;
+        float visualOffset = (physicalRadiusChange - visualRadiusChange) * 0.01f;
+        sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
     }
 
     public void ScaleVisual()
     {
-        calibOffsetOneHand.y = originalOffsety;
+        //calibOffsetOneHand.y = originalOffsety;
 
         float scaleVal = changeMapping[visualRadiusChange];
         sphere.transform.localScale = new Vector3(scaleVal, scaleVal, scaleVal);
         //if (dataController.fixedFactor == CongruencyDataController.FixedFactor.fixedVolume) {
             //sphere.transform.localPosition = new Vector3(homePos.x, homePos.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f, homePos.z);
-        calibOffsetOneHand.y = calibOffsetOneHand.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f;
+        //calibOffsetOneHand.y = calibOffsetOneHand.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f;
         //}
     }
 
@@ -89,12 +107,11 @@ public class TestController : MonoBehaviour
     {
         if (dataController.technique == CongruencyDataController.Technique.oneHand)
         {
-            Vector3 handPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
-            sphere.transform.position = handPos + calibOffsetOneHand;
+            //sphere.transform.position = hand.position + calibOffsetOneHand;
         } else
         {
-            Vector3 leftHandPos = GameObject.Find("[BuildingBlock] Hand Tracking left").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
-            Vector3 rightHandPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_Palm").transform.position;
+            Vector3 leftHandPos = GameObject.Find("[BuildingBlock] Hand Tracking left").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal").transform.position;
+            Vector3 rightHandPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal").position;
             sphere.transform.position = ((leftHandPos + rightHandPos) / 2) + calibOffsetTwoHand;
         }
         homePos = sphere.transform.position;
@@ -105,11 +122,12 @@ public class TestController : MonoBehaviour
         serialController.GoTo(0);
         StartCoroutine(PhysicalHelper());
     }
+
     public IEnumerator PhysicalHelper() {
         yield return new WaitForSeconds(1);
         serialController.GoTo((int)(physicalRadiusChange / 2f * 100));
         //if (dataController.fixedFactor == IDataController.FixedFactor.fixedVisual) {
-        sphere.transform.localPosition = new Vector3(homePos.x, homePos.y + (changeMapping[physicalRadiusChange] - 0.1258f) / 2, homePos.z);
+        //sphere.transform.localPosition = new Vector3(homePos.x, homePos.y + (changeMapping[physicalRadiusChange] - 0.1258f) / 2, homePos.z);
         //}
     }
 
