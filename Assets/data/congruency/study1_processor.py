@@ -5,10 +5,10 @@ import os
 import numpy as np
 
 # Load data
-pids = [1]
+pids = [2]
 
 for pid in pids:
-    file_path = f"Assets\\data\\congruency\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
+    file_path = f"p_sheets\\p{pid}\\p{pid}_conditions.csv"
     df = pd.read_csv(file_path)
     print(df)
 
