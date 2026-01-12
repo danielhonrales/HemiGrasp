@@ -104,8 +104,9 @@ public class CongruencyDataController : MonoBehaviour
         testController.visualRadiusChange = float.Parse(csvData[currentTrial][dataIndex["visualSize"]]);
         testController.physicalRadiusChange = float.Parse(csvData[currentTrial][dataIndex["physicalSize"]]);
 
-        testController.ScaleVisual();
-        testController.ScalePhysical();
+        //testController.ScaleVisual();
+        //testController.ScalePhysical();
+        testController.ScaleAll();
         testController.sphere.SetActive(true);
     }
 

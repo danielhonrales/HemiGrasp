@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 # Load data
-pids = [2]
+pids = [4]
 
 for pid in pids:
     file_path = f"p_sheets\\p{pid}\\p{pid}_conditions.csv"
