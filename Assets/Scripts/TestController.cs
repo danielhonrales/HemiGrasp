@@ -16,6 +16,8 @@ public class TestController : MonoBehaviour
     public float visualRadiusChange;
     [Range(0f, 2f)]
     public float physicalRadiusChange;
+    public float visualSpeed;
+    public float physicalSpeed;
 
     [Header("Calibration"), Space(10)]
     public Vector3 calibOffsetOneHand;
@@ -129,6 +131,32 @@ public class TestController : MonoBehaviour
         //if (dataController.fixedFactor == IDataController.FixedFactor.fixedVisual) {
         //sphere.transform.localPosition = new Vector3(homePos.x, homePos.y + (changeMapping[physicalRadiusChange] - 0.1258f) / 2, homePos.z);
         //}
+    }
+
+    public IEnumerator DynamicPhysical()
+    {
+       yield return null; 
+    }
+
+    public IEnumerator DynamicVisual(int direction)
+    {
+        float elapsed = 0f;
+        float duration = 2.0f;
+
+        float startScale = (direction == 1) ? changeMapping[0] : changeMapping[2];
+        float endScale = (direction == 1) ? changeMapping[2] : changeMapping[0];
+        transform.localScale = new Vector3(startScale, startScale, startScale);
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            transform.localScale = Vector3.Lerp(new Vector3(startScale, startScale, startScale), new Vector3(endScale, endScale, endScale), t);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.localScale = new Vector3(endScale, endScale, endScale);
     }
 
     public void AlertEnd()
