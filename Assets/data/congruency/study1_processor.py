@@ -5,10 +5,13 @@ import os
 import numpy as np
 
 # Load data
-pids = [4]
+pids = [1,2,3,4]
+
+all_trials = []
+all_data = []
 
 for pid in pids:
-    file_path = f"p_sheets\\p{pid}\\p{pid}_conditions.csv"
+    file_path = f"Assets\\data\\congruency\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
     df = pd.read_csv(file_path)
     print(df)
 
@@ -25,8 +28,10 @@ for pid in pids:
         ~df["visualSize"].isin(exclude_vals)
     ]
 
+    all_trials.append(df.copy())
     # Filter congruent trials
     df = df[df["congruent"] == 1]
+    all_data.append(df)
 
     # Get sorted physical size levels
     physical_levels = sorted(df["physicalSize"].unique())
@@ -71,12 +76,144 @@ for pid in pids:
 
     plt.xlabel("Physical Size")
     plt.ylabel("Visual Size")
-    plt.title("Visual Size Distributions for Congruent Trials")
+    plt.title(f"P{pid}")
 
-    plt.show()
+    #plt.show()
 
     # === SAVE FIGURE WITH SAME NAME AS CSV ===
-    save_path = f"Assets\\data\\output\\p{pid}.png"
+    save_path = f"Assets\\data\\congruency\\output\\p{pid}.png"
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
 
     #plt.show()
+
+
+# ===============================
+# COMBINED PLOT (ALL PARTICIPANTS)
+# ===============================
+
+df_all = pd.concat(all_data, ignore_index=True)
+
+# Get sorted physical size levels
+physical_levels_all = sorted(df_all["physicalSize"].unique())
+
+# Group visualSize by physicalSize
+grouped_visuals_all = [
+    df_all[df_all["physicalSize"] == p]["visualSize"].values
+    for p in physical_levels_all
+]
+
+plt.figure()
+
+plt.boxplot(
+    grouped_visuals_all,
+    positions=physical_levels_all,
+    widths=0.1
+)
+
+plt.xlabel("Physical Size")
+plt.ylabel("Visual Size")
+plt.title("All Participants Combined")
+
+save_path = "Assets\\data\\congruency\\output\\all_participants.png"
+plt.savefig(save_path, dpi=300, bbox_inches="tight")
+plt.close()
+
+
+# ===============================
+# Acceptability Curve
+# ===============================
+
+df_trials = pd.concat(all_trials, ignore_index=True)
+
+# Apply the SAME exclusions
+exclude_vals = [0.25, 0.75, 1.25, 1.75]
+
+df_trials = df_trials[
+    ~df_trials["physicalSize"].isin(exclude_vals) &
+    ~df_trials["visualSize"].isin(exclude_vals)
+]
+
+acceptance = (
+    df_trials
+    .groupby(["physicalSize", "visualSize"])["congruent"]
+    .mean()
+    .reset_index()
+)
+
+plt.figure(figsize=(8, 6))
+
+physical_levels = sorted(acceptance["physicalSize"].unique())
+
+for p in physical_levels:
+    subset = acceptance[acceptance["physicalSize"] == p]
+
+    plt.plot(
+        subset["visualSize"],
+        subset["congruent"],
+        marker="o",
+        label=f"physicalSize = {p}"
+    )
+
+plt.axhline(0.70, linestyle="--", linewidth=1)
+plt.yticks(np.arange(0, 1.01, 0.1))
+plt.xlabel("Visual Size")
+plt.ylabel("P(Congruent Response)")
+plt.title("Congruent Probability Curves")
+plt.ylim(0, 1.05)
+plt.legend(title="Physical Size")
+
+save_path = "Assets\\data\\congruency\\output\\acceptance_curves.png"
+plt.savefig(save_path, dpi=300, bbox_inches="tight")
+plt.close()
+
+# ===============================
+# ACCEPTANCE CURVES PER PARTICIPANT
+# ===============================
+
+for pid in pids:
+    file_path = f"Assets\\data\\congruency\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
+    df_p = pd.read_csv(file_path)
+
+    # Ensure numeric
+    df_p["physicalSize"] = pd.to_numeric(df_p["physicalSize"], errors="coerce")
+    df_p["visualSize"] = pd.to_numeric(df_p["visualSize"], errors="coerce")
+
+    # Apply same exclusions
+    df_p = df_p[
+        ~df_p["physicalSize"].isin(exclude_vals) &
+        ~df_p["visualSize"].isin(exclude_vals)
+    ]
+
+    # Compute acceptance probabilities
+    acceptance_p = (
+        df_p
+        .groupby(["physicalSize", "visualSize"])["congruent"]
+        .mean()
+        .reset_index()
+    )
+
+    plt.figure(figsize=(8, 6))
+
+    physical_levels = sorted(acceptance_p["physicalSize"].unique())
+
+    for p in physical_levels:
+        subset = acceptance_p[acceptance_p["physicalSize"] == p]
+
+        plt.plot(
+            subset["visualSize"],
+            subset["congruent"],
+            marker="o",
+            label=f"physicalSize = {p}"
+        )
+
+    plt.axhline(0.70, linestyle="--", linewidth=1)
+    plt.yticks(np.arange(0, 1.01, 0.1))
+    plt.xlabel("Visual Size")
+    plt.ylabel("P(Congruent Response)")
+    plt.title(f"Participant {pid} – Acceptance Curves")
+    plt.ylim(0, 1.05)
+    plt.legend(title="Physical Size")
+
+    save_path = f"Assets\\data\\congruency\\output\\p{pid}_acceptance_curves.png"
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close()
