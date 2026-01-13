@@ -1118,6 +1118,8 @@ MonoBehaviour:
   trialNumber: 1
   visualRadiusChange: 2
   physicalRadiusChange: 0
+  visualSpeed: 0
+  physicalSpeed: 0
   calibOffsetOneHand: {x: 0, y: 0, z: 0}
   calibOffsetTwoHand: {x: 0, y: 0, z: 0.03}
   homePos: {x: 0, y: 0, z: 0}

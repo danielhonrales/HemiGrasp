@@ -106,7 +106,13 @@ public class CongruencyDataController : MonoBehaviour
 
         //testController.ScaleVisual();
         //testController.ScalePhysical();
-        testController.ScaleAll();
+
+        if (technique == Technique.oneHand) {
+            testController.ScaleAll(false);
+        } else {
+            testController.ScaleAll(true);
+        }
+
         testController.sphere.SetActive(true);
     }
 
@@ -153,7 +159,7 @@ public class CongruencyDataController : MonoBehaviour
     public void EndSet()
     {
         SaveData();
-        Debug.Log("*****Set Finised*****");
+        Debug.Log("*****Set Finished*****");
         testController.AlertEnd();
     }
 

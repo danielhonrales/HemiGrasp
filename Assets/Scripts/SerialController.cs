@@ -7,30 +7,43 @@ using System.Collections;
 public class SerialController : MonoBehaviour
 {
     [Header("Serial Config")]
-    public string portName = "COM6";
+    public string firstHandPort = "COM6";
+    public string secondHandPort = "COM14";
     public int baudRate = 115200;
     public int errorWarning = 50;
 
     [Header("Runtime")]
     public string activeMotor = "A";
 
-    private SerialPort serial;
+    private SerialPort firstHandSerial;
+    private SerialPort secondHandSerial;
     private System.Random rng = new System.Random();
 
     void Start()
     {
-        serial = new SerialPort(portName, baudRate);
-        serial.ReadTimeout = 10;
-        serial.NewLine = "\n";
+        firstHandSerial = new SerialPort(firstHandPort, baudRate);
+        firstHandSerial.ReadTimeout = 10;
+        firstHandSerial.NewLine = "\n";
+
+        secondHandSerial = new SerialPort(secondHandPort, baudRate);
+        secondHandSerial.ReadTimeout = 10;
+        secondHandSerial.NewLine = "\n";
 
         try
         {
-            serial.Open();
-            Debug.Log("Serial connected");
+            firstHandSerial.Open();
+            Debug.Log("First hand serial connected");
         }
         catch (Exception e)
         {
-            Debug.LogError("Serial error: " + e.Message);
+            Debug.LogError("First hand serial error: " + e.Message);
+        }
+
+        try {
+            secondHandSerial.Open();
+            Debug.Log("Second hand serial connected");
+        } catch (Exception e) {
+            Debug.LogError("Second hand serial error: " + e.Message);
         }
 
         // Arduino reset delay
@@ -39,17 +52,24 @@ public class SerialController : MonoBehaviour
 
     void OnDestroy()
     {
-        if (serial != null && serial.IsOpen)
-            serial.Close();
+        if (firstHandSerial != null && firstHandSerial.IsOpen)
+            firstHandSerial.Close();
+
+        if (secondHandSerial != null && secondHandSerial.IsOpen)
+            secondHandSerial.Close();
     }
 
     // ---------------- SERIAL HELPERS ----------------
 
-    void SendCmd(string cmd)
+    void SendCmd(string cmd, bool secondHand)
     {
-        if (serial != null && serial.IsOpen)
+        if (!secondHand && firstHandSerial != null && firstHandSerial.IsOpen)
         {
-            serial.WriteLine(cmd);
+            firstHandSerial.WriteLine(cmd);
+        }
+        else if (secondHandSerial != null && secondHandSerial.IsOpen)
+        {
+            secondHandSerial.WriteLine(cmd);
         }
     }
 
@@ -62,7 +82,7 @@ public class SerialController : MonoBehaviour
 
         try
         {
-            string line = serial.ReadLine();
+            string line = firstHandSerial.ReadLine();
             string[] values = line.Split(',');
 
             if (values.Length < 3) return false;
@@ -87,30 +107,30 @@ public class SerialController : MonoBehaviour
 
     // ---------------- MAIN LOGIC ----------------
 
-    public void GoTo(int location, bool calibration = true)
+    public void GoTo(int location, bool secondHand, bool calibration = true)
     {
-        SendCmd("START");
+        SendCmd("START", secondHand);
 
         if (!calibration)
         {
             int randA = rng.Next(0, 101);
             int randB = rng.Next(0, 101);
 
-            SendCmd($"{activeMotor},{randA}");
+            SendCmd($"{activeMotor},{randA}", secondHand);
             Thread.Sleep(250);
 
-            SendCmd($"{activeMotor},{randB}");
+            SendCmd($"{activeMotor},{randB}", secondHand);
             Thread.Sleep(250);
 
             Debug.Log($"Rand pos: A {(randA * 10):0} | B {(randB * 10):0}");
         }
 
-        SendCmd($"{activeMotor},{location}");
+        SendCmd($"{activeMotor},{location}", secondHand);
         //Thread.Sleep(1000);
 
         //SendCmd("STOP");
         //SendCmd("POS");
-        StartCoroutine(Helper());
+        StartCoroutine(Helper(secondHand));
 
         if (GetPosAndError(location, out float m, out float t, out float l,
                                          out float mErr, out float tErr, out float lErr))
@@ -129,13 +149,13 @@ public class SerialController : MonoBehaviour
         }
     }
 
-    public void StopPID() {
-        SendCmd("STOP");
+    public void StopPID(bool secondHand = false) {
+        SendCmd("STOP", secondHand);
     }
 
-    public IEnumerator Helper() {
+    public IEnumerator Helper(bool secondHand = false) {
         yield return new WaitForSeconds(1);
-        SendCmd("STOP");
+        SendCmd("STOP", secondHand);
     }
 
     // ---------------- INPUT HELPERS ----------------
@@ -148,15 +168,17 @@ public class SerialController : MonoBehaviour
 
     public void Home()
     {
-        GoTo(0);
+        GoTo(0, false);
+        GoTo(0, true);
     }
 
     public void Full()
     {
-        GoTo(100);
+        GoTo(100, false);
+        GoTo(100, true);
     }
 
-    public void Go25() => GoTo(25);
-    public void Go50() => GoTo(50);
-    public void Go75() => GoTo(75);
+    //public void Go25() => GoTo(25);
+    //public void Go50() => GoTo(50);
+    //public void Go75() => GoTo(75);
 }
