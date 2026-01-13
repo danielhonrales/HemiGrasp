@@ -15,18 +15,9 @@ for pid in pids:
     df = pd.read_csv(file_path)
     print(df)
 
-    # Values to exclude
-    exclude_vals = [0.25, 0.75, 1.25, 1.75]
-
     # Ensure numeric (safety)
     df["physicalSize"] = pd.to_numeric(df["physicalSize"], errors="coerce")
     df["visualSize"] = pd.to_numeric(df["visualSize"], errors="coerce")
-
-    # Filter out excluded sizes
-    df = df[
-        ~df["physicalSize"].isin(exclude_vals) &
-        ~df["visualSize"].isin(exclude_vals)
-    ]
 
     all_trials.append(df.copy())
     # Filter congruent trials
@@ -125,14 +116,6 @@ plt.close()
 
 df_trials = pd.concat(all_trials, ignore_index=True)
 
-# Apply the SAME exclusions
-exclude_vals = [0.25, 0.75, 1.25, 1.75]
-
-df_trials = df_trials[
-    ~df_trials["physicalSize"].isin(exclude_vals) &
-    ~df_trials["visualSize"].isin(exclude_vals)
-]
-
 acceptance = (
     df_trials
     .groupby(["physicalSize", "visualSize"])["congruent"]
@@ -177,12 +160,6 @@ for pid in pids:
     # Ensure numeric
     df_p["physicalSize"] = pd.to_numeric(df_p["physicalSize"], errors="coerce")
     df_p["visualSize"] = pd.to_numeric(df_p["visualSize"], errors="coerce")
-
-    # Apply same exclusions
-    df_p = df_p[
-        ~df_p["physicalSize"].isin(exclude_vals) &
-        ~df_p["visualSize"].isin(exclude_vals)
-    ]
 
     # Compute acceptance probabilities
     acceptance_p = (

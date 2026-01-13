@@ -10,7 +10,7 @@ physical_speed = [-1.0, -0.5, 0, 0.5, 1.0]
 visual_speed   = [-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5]
 
 num_participants = 12
-repetitions = 4  # per condition
+repetitions = 5  # per condition
 
 # Output base folder
 output_base = 'Assets\\data\\study2\\p_sheets'

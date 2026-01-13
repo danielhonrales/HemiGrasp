@@ -7,10 +7,10 @@ import os
 # Define the conditions
 # -------------------------------
 physical_size = [0, 0.5, 1.0, 1.5, 2.0]
-visual_size   = [0, 0.5, 1.0, 1.5, 2.0]
+visual_size   = [-0.5, 0, 0.5, 1.0, 1.5, 2.0, 2.5]
 
 num_participants = 12
-repetitions = 4  # per condition
+repetitions = 5  # per condition
 
 # Output base folder
 output_base = 'Assets\\data\\congruency\\p_sheets'
