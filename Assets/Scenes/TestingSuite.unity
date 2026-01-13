@@ -1120,7 +1120,8 @@ MonoBehaviour:
   physicalRadiusChange: 0
   visualSpeed: 0
   physicalSpeed: 0
-  calibOffsetOneHand: {x: 0, y: 0, z: 0}
+  bothHands: 0
+  calibOffsetOneHand: {x: -0.015, y: -0.07, z: 0.015}
   calibOffsetTwoHand: {x: 0, y: 0, z: 0.03}
   homePos: {x: 0, y: 0, z: 0}
   tracking: 0
@@ -1154,7 +1155,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c13f54512a96d5a459480d06b5f2e9d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  portName: COM6
+  firstHandPort: COM6
+  secondHandPort: COM14
   baudRate: 115200
   errorWarning: 50
   activeMotor: A

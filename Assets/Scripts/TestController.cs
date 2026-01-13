@@ -12,7 +12,7 @@ public class TestController : MonoBehaviour
 
     [Header("TestControl"), Space(10)]
     public int trialNumber;
-    [Range(0f, 4f)]
+    [Range(-0.5f, 2.5f)]
     public float visualRadiusChange;
     [Range(0f, 2f)]
     public float physicalRadiusChange;
@@ -194,6 +194,12 @@ public class TestController : MonoBehaviour
 
     public Dictionary<float, float> changeMapping = new()
     {
+        {-0.50f, 0.1158f},
+        {-0.40f, 0.1178f},
+        {-0.30f, 0.1198f},
+        {-0.25f, 0.1208f},
+        {-0.20f, 0.1218f},
+        {-0.10f, 0.1238f},
         {0.00f, 0.1258f},
         {0.10f, 0.1278f},
         {0.20f, 0.1298f},
@@ -224,24 +230,6 @@ public class TestController : MonoBehaviour
         {2.25f, 0.1708f},
         {2.30f, 0.1718f},
         {2.40f, 0.1738f},
-        {2.50f, 0.1758f},
-        {2.60f, 0.1778f},
-        {2.70f, 0.1798f},
-        {2.75f, 0.1808f},
-        {2.80f, 0.1818f},
-        {2.90f, 0.1838f},
-        {3.00f, 0.1858f},
-        {3.10f, 0.1878f},
-        {3.20f, 0.1898f},
-        {3.25f, 0.1908f},
-        {3.30f, 0.1918f},
-        {3.40f, 0.1938f},
-        {3.50f, 0.1958f},
-        {3.60f, 0.1978f},
-        {3.70f, 0.1998f},
-        {3.75f, 0.2008f},
-        {3.80f, 0.2018f},
-        {3.90f, 0.2038f},
-        {4.00f, 0.2058f},
+        {2.50f, 0.1758f}
     };
 }
