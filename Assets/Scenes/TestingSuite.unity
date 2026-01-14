@@ -1116,15 +1116,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trialNumber: 1
-  visualRadiusChange: 2
+  visualRadiusChange: 0
   physicalRadiusChange: 0
-  visualSpeed: 0
-  physicalSpeed: 0
+  isDynamic: 0
+  dynamicForward: 0
+  visualSpeed: 1
+  physicalSpeed: 1
   bothHands: 0
   calibOffsetOneHand: {x: -0.015, y: -0.07, z: 0.015}
   calibOffsetTwoHand: {x: 0, y: 0, z: 0.03}
   homePos: {x: 0, y: 0, z: 0}
   tracking: 0
+  dynamicStepDuration: 0.1
   sphere: {fileID: 2116133114}
   serialController: {fileID: 1168516024}
   dataController: {fileID: 1168516025}

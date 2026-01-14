@@ -16,6 +16,8 @@ public class TestController : MonoBehaviour
     public float visualRadiusChange;
     [Range(0f, 2f)]
     public float physicalRadiusChange;
+    public bool isDynamic;
+    public bool dynamicForward;
     public float visualSpeed;
     public float physicalSpeed;
     public bool bothHands;
@@ -25,6 +27,7 @@ public class TestController : MonoBehaviour
     public Vector3 calibOffsetTwoHand;
     public Vector3 homePos;
     public bool tracking;
+    public float dynamicStepDuration;
 
     [Header("References"), Space(10)]
     public GameObject sphere;
@@ -45,12 +48,24 @@ public class TestController : MonoBehaviour
     void Update()
     {
         visualRadiusChange = Mathf.Round(visualRadiusChange * 20f) / 20f;
-        ScaleVisual();
+
+        if (!isDynamic)
+        {
+            ScaleVisual();
+        }
+        
         physicalRadiusChange = Mathf.Round(physicalRadiusChange * 20f) / 20f;
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ScaleAll(bothHands);
+            if (isDynamic)
+            {
+                DynamicAll();
+            }
+            else
+            {
+                ScaleAll(bothHands);
+            }
         }
         if (Input.GetKeyDown(KeyCode.C))
         {
@@ -144,30 +159,84 @@ public class TestController : MonoBehaviour
         //}
     }
 
-    public IEnumerator DynamicPhysical()
+    public void DynamicAll() {
+        if (dynamicForward) {
+            StartCoroutine(DynamicVisual(1));
+            StartCoroutine(DynamicPhysical(1));
+        } else {
+            StartCoroutine(DynamicVisual(0));
+            StartCoroutine(DynamicPhysical(0));
+        }
+    }
+
+    public IEnumerator DynamicPhysical(int direction)
     {
-       yield return null; 
+        float elapsed = 0f;
+        float duration = 2.0f / physicalSpeed;
+
+        float startRadius = (direction == 1) ? 0.0f : 2.0f;
+        float endRadius = (direction == 1) ? 2.0f : 0.0f;
+        serialController.GoTo((int)(startRadius / 2f * 100), false, true, true);
+
+        while (elapsed <= duration)
+        {
+            float t = elapsed / duration;
+            physicalRadiusChange = Mathf.Lerp(startRadius, endRadius, t);
+            serialController.GoTo((int)(physicalRadiusChange / 2f * 100), false, true, true);
+
+            elapsed += dynamicStepDuration;
+            yield return new WaitForSeconds(dynamicStepDuration);
+        }
+
+        serialController.GoTo((int)(endRadius / 2f * 100), false);
     }
 
     public IEnumerator DynamicVisual(int direction)
     {
         float elapsed = 0f;
-        float duration = 2.0f;
+        //float duration = 2.0f / visualSpeed;
+        float duration = 2.0f / physicalSpeed;
+
+        float forwardEnd = (visualSpeed / physicalSpeed) * 2;
+        float backwardEnd = (forwardEnd - 2) * -1;
+
+        float forwardEndMapped = (forwardEnd * 0.02f) + 0.1258f;
+        float backwardEndMapped = (backwardEnd * 0.02f) + 0.1258f;
 
         float startScale = (direction == 1) ? changeMapping[0] : changeMapping[2];
-        float endScale = (direction == 1) ? changeMapping[2] : changeMapping[0];
-        transform.localScale = new Vector3(startScale, startScale, startScale);
+        //float endScale = (direction == 1) ? changeMapping[2] : changeMapping[0];
 
-        while (elapsed < duration)
+        float endScale;
+        if (direction == 1) {
+            endScale = forwardEndMapped;
+        } else {
+            endScale = backwardEndMapped;
+        }
+
+        sphere.transform.localScale = new Vector3(startScale, startScale, startScale);
+
+        float delay = (1 / physicalSpeed) * dynamicStepDuration;
+
+        yield return new WaitForSeconds((dynamicStepDuration * 1.5f) + delay);
+
+        duration -= delay;
+
+        while (elapsed <= duration)
         {
             float t = elapsed / duration;
-            transform.localScale = Vector3.Lerp(new Vector3(startScale, startScale, startScale), new Vector3(endScale, endScale, endScale), t);
+         
+            sphere.transform.localScale = Vector3.Lerp(new Vector3(startScale, startScale, startScale), new Vector3(endScale, endScale, endScale), t);
+
+            sphere.transform.position = homePos;
+            float visualOffset = (physicalRadiusChange - ((Mathf.Lerp(startScale, endScale, t) - 0.1258f) / 0.02f)) * 0.01f;
+            Debug.Log($"DEBUG! homePos: {homePos} | physicalRadiusChange: {physicalRadiusChange} | visualRadius: {((Mathf.Lerp(startScale, endScale, t) - 0.1258f) / 0.02f)} | visualOffset: {visualOffset}");
+            sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        transform.localScale = new Vector3(endScale, endScale, endScale);
+        sphere.transform.localScale = new Vector3(endScale, endScale, endScale);
     }
 
     public void AlertEnd()
