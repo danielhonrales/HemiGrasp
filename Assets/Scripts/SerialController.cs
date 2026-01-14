@@ -107,8 +107,9 @@ public class SerialController : MonoBehaviour
 
     // ---------------- MAIN LOGIC ----------------
 
-    public void GoTo(int location, bool secondHand, bool calibration = true)
+    public void GoTo(int location, bool secondHand, bool calibration = true, bool intermediate = false)
     {
+        Debug.Log($"GOING TO: {location}");
         SendCmd("START", secondHand);
 
         if (!calibration)
@@ -130,7 +131,11 @@ public class SerialController : MonoBehaviour
 
         //SendCmd("STOP");
         //SendCmd("POS");
-        StartCoroutine(Helper(secondHand));
+
+        if (!intermediate)
+            {
+            StartCoroutine(Helper(secondHand));
+        }
 
         if (GetPosAndError(location, out float m, out float t, out float l,
                                          out float mErr, out float tErr, out float lErr))
