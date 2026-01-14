@@ -6,8 +6,8 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-physical_speed = [-1.0, -0.5, 0, 0.5, 1.0]
-visual_speed   = [-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5]
+physical_velocity = [-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5]
+visual_multiplier   = [0.50, 0.75, 1.00, 1.25, 1.50]
 
 num_participants = 12
 repetitions = 5  # per condition
@@ -19,7 +19,7 @@ os.makedirs(output_base, exist_ok=True)
 # -------------------------------
 # Generate all physical × visual conditions
 # -------------------------------
-conditions = list(itertools.product(physical_speed, visual_speed))
+conditions = list(itertools.product(physical_velocity, visual_multiplier))
 
 # -------------------------------
 # Generate trials for one participant
