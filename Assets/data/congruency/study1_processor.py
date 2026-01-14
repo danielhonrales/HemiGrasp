@@ -5,13 +5,15 @@ import os
 import numpy as np
 
 # Load data
-pids = [1,2,3,4]
+pids = [1, 2]
 
 all_trials = []
 all_data = []
 
+home_path = f"."
+
 for pid in pids:
-    file_path = f"Assets\\data\\congruency\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
+    file_path = f"{home_path}\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
     df = pd.read_csv(file_path)
     print(df)
 
@@ -72,7 +74,7 @@ for pid in pids:
     #plt.show()
 
     # === SAVE FIGURE WITH SAME NAME AS CSV ===
-    save_path = f"Assets\\data\\congruency\\output\\p{pid}.png"
+    save_path = f"{home_path}\\output\\p{pid}.png"
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
 
     #plt.show()
@@ -105,7 +107,7 @@ plt.xlabel("Physical Size")
 plt.ylabel("Visual Size")
 plt.title("All Participants Combined")
 
-save_path = "Assets\\data\\congruency\\output\\all_participants.png"
+save_path = f"{home_path}\\output\\all_participants.png"
 plt.savefig(save_path, dpi=300, bbox_inches="tight")
 plt.close()
 
@@ -145,7 +147,7 @@ plt.title("Congruent Probability Curves")
 plt.ylim(0, 1.05)
 plt.legend(title="Physical Size")
 
-save_path = "Assets\\data\\congruency\\output\\acceptance_curves.png"
+save_path = f"{home_path}\\output\\acceptance_curves.png"
 plt.savefig(save_path, dpi=300, bbox_inches="tight")
 plt.close()
 
@@ -154,7 +156,7 @@ plt.close()
 # ===============================
 
 for pid in pids:
-    file_path = f"Assets\\data\\congruency\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
+    file_path = f"{home_path}\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
     df_p = pd.read_csv(file_path)
 
     # Ensure numeric
@@ -191,6 +193,6 @@ for pid in pids:
     plt.ylim(0, 1.05)
     plt.legend(title="Physical Size")
 
-    save_path = f"Assets\\data\\congruency\\output\\p{pid}_acceptance_curves.png"
+    save_path = f"{home_path}\\output\\p{pid}_acceptance_curves.png"
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
