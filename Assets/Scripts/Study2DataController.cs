@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -103,12 +104,13 @@ public class Study2DataController : MonoBehaviour
 
         testController.sphere.SetActive(true);
 
-        testController.visualRadiusChange = float.Parse(csvData[currentTrial][dataIndex["visualSpeed"]]);
-        testController.physicalRadiusChange = float.Parse(csvData[currentTrial][dataIndex["physicalSpeed"]]);
+        float physicalVal = float.Parse(csvData[currentTrial][dataIndex["physicalVelocity"]]);
+        testController.physicalSpeed = Math.Abs(physicalVal);
+        testController.dynamicForward = Math.Sign(physicalVal) >= 0;
+        testController.visualSpeed = float.Parse(csvData[currentTrial][dataIndex["visualMultiplier"]]) * testController.physicalSpeed;
 
-        testController.ScaleVisual();
-        testController.ScalePhysical();
-        
+        //testController.ScaleVisual();
+        //testController.ScalePhysical();
     }
 
     public void NextTrial()
