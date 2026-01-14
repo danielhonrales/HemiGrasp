@@ -9,7 +9,7 @@ import os
 physical_velocity = [-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5]
 visual_multiplier   = [0.50, 0.75, 1.00, 1.25, 1.50]
 
-num_participants = 12
+num_participants = 15
 repetitions = 5  # per condition
 
 # Output base folder
@@ -37,8 +37,8 @@ def generate_participant_trials(pid):
         trial = {
             'pid': pid,
             'trial': trial_num,
-            'physicalSpeed': phys,
-            'visualSpeed': vis,
+            'physicalVelocity': phys,
+            'visualMultiplier': vis,
             'congruent': None
         }
         trials.append(trial)
@@ -59,6 +59,6 @@ def save_participant_csv(pid, df, base_folder):
 # -------------------------------
 # Main loop
 # -------------------------------
-for pid in range(1, num_participants + 1):
+for pid in range(15, num_participants + 2):
     df = generate_participant_trials(pid)
     save_participant_csv(pid, df, output_base)
