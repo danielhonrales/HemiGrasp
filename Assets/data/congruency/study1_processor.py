@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
+import matplotlib.cm as cm
 import os
 import numpy as np
 
@@ -10,7 +11,7 @@ pids = [1, 2, 3, 4, 5]
 all_trials = []
 all_data = []
 
-home_path = f"."
+home_path = f"Assets\\data\\congruency"
 
 for pid in pids:
     file_path = f"{home_path}\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
@@ -52,23 +53,25 @@ for pid in pids:
     plt.figure()
 
     # Box-and-whisker plot
-    plt.boxplot(
+    """ plt.boxplot(
         grouped_visuals,
         positions=physical_levels,
         widths=0.1
-    )
+    ) """
 
     # Overlay mean ± std
-    """ plt.errorbar(
+    plt.errorbar(
         physical_levels,
         means,
         yerr=stds,
         fmt='o',
         capsize=5
-    ) """
+    )
 
     plt.xlabel("Physical Size")
     plt.ylabel("Visual Size")
+    plt.xticks(np.arange(0, 2.1, 0.5))
+    plt.yticks(np.arange(-0.5, 2.6, 0.5))
     plt.title(f"P{pid}")
 
     #plt.show()
@@ -95,16 +98,37 @@ grouped_visuals_all = [
     for p in physical_levels_all
 ]
 
+# Compute mean and std per physicalSize
+means = [
+    np.mean(vals) if len(vals) > 0 else np.nan
+    for vals in grouped_visuals_all
+]
+
+stds = [
+    np.std(vals, ddof=1) if len(vals) > 1 else np.nan
+    for vals in grouped_visuals_all
+]
+
 plt.figure()
 
-plt.boxplot(
+""" plt.boxplot(
     grouped_visuals_all,
     positions=physical_levels_all,
     widths=0.1
-)
+) """
+
+plt.errorbar(
+        physical_levels,
+        means,
+        yerr=stds,
+        fmt='o',
+        capsize=5
+    )
 
 plt.xlabel("Physical Size")
+plt.xticks(np.arange(0, 2.1, 0.5))
 plt.ylabel("Visual Size")
+plt.yticks(np.arange(-0.5, 2.6, 0.5))
 plt.title("All Participants Combined")
 
 save_path = f"{home_path}\\output\\all_participants.png"
@@ -128,18 +152,23 @@ acceptance = (
 plt.figure(figsize=(8, 6))
 
 physical_levels = sorted(acceptance["physicalSize"].unique())
+cmap = cm.gnuplot
+colors = cmap(np.linspace(0, .85, len(physical_levels)))
 
-for p in physical_levels:
+plt.figure(figsize=(8, 6))
+
+for p, color in zip(physical_levels, colors):
     subset = acceptance[acceptance["physicalSize"] == p]
 
     plt.plot(
         subset["visualSize"],
         subset["congruent"],
         marker="o",
+        color=color,
         label=f"physicalSize = {p}"
     )
 
-plt.axhline(0.70, linestyle="--", linewidth=1)
+plt.axhline(0.70, linestyle="--", linewidth=1, color="gray")
 plt.yticks(np.arange(0, 1.01, 0.1))
 plt.xlabel("Visual Size")
 plt.ylabel("P(Congruent Response)")
@@ -159,11 +188,9 @@ for pid in pids:
     file_path = f"{home_path}\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
     df_p = pd.read_csv(file_path)
 
-    # Ensure numeric
     df_p["physicalSize"] = pd.to_numeric(df_p["physicalSize"], errors="coerce")
     df_p["visualSize"] = pd.to_numeric(df_p["visualSize"], errors="coerce")
 
-    # Compute acceptance probabilities
     acceptance_p = (
         df_p
         .groupby(["physicalSize", "visualSize"])["congruent"]
@@ -171,21 +198,23 @@ for pid in pids:
         .reset_index()
     )
 
+    physical_levels = sorted(acceptance_p["physicalSize"].unique())
+    colors = cmap(np.linspace(0, .85, len(physical_levels)))
+
     plt.figure(figsize=(8, 6))
 
-    physical_levels = sorted(acceptance_p["physicalSize"].unique())
-
-    for p in physical_levels:
+    for p, color in zip(physical_levels, colors):
         subset = acceptance_p[acceptance_p["physicalSize"] == p]
 
         plt.plot(
             subset["visualSize"],
             subset["congruent"],
             marker="o",
+            color=color,
             label=f"physicalSize = {p}"
         )
 
-    plt.axhline(0.70, linestyle="--", linewidth=1)
+    plt.axhline(0.70, linestyle="--", linewidth=1, color="gray")
     plt.yticks(np.arange(0, 1.01, 0.1))
     plt.xlabel("Visual Size")
     plt.ylabel("P(Congruent Response)")

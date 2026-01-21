@@ -6,8 +6,8 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-physical_size = [0, 0.5, 1.0, 1.5, 2.0]
-visual_size   = [-0.5, 0, 0.5, 1.0, 1.5, 2.0, 2.5]
+physical_size = [20, 40, 60, 80, 100, 120]
+visual_size   = [50, 67.5, 75, 87.5, 100, 125, 150, 175, 200]
 
 num_participants = 12
 repetitions = 5  # per condition
