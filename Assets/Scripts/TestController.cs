@@ -12,14 +12,18 @@ public class TestController : MonoBehaviour
 
     [Header("TestControl"), Space(10)]
     public int trialNumber;
-    [Range(-0.5f, 2.5f)]
-    public float visualRadiusChange;
+    [Range(10f, 240f)]
+    public float visualRadius;
     [Range(0f, 2f)]
     public float physicalRadiusChange;
+    [Range(20f, 120f)]
+    public float physicalRadius;
     public bool isDynamic;
     public bool dynamicForward;
     public float visualSpeed;
     public float physicalSpeed;
+    public bool limitDynamicTime;
+    public float dynamicTime;
     public bool bothHands;
 
     [Header("Calibration"), Space(10)]
@@ -32,7 +36,7 @@ public class TestController : MonoBehaviour
     [Header("References"), Space(10)]
     public GameObject sphere;
     public SerialController serialController;
-    public CongruencyDataController dataController;
+    //public CongruencyDataController dataController;
 
     private float originalOffsety;
     private Transform hand;
@@ -47,15 +51,15 @@ public class TestController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        visualRadiusChange = Mathf.Round(visualRadiusChange * 20f) / 20f;
+        visualRadius = Mathf.Round(visualRadius * 20f) / 20f;
+        physicalRadiusChange = Mathf.Round(physicalRadiusChange * 20f) / 20f;
+        physicalRadius = Mathf.Round(physicalRadius * 20f) / 20f;
 
         if (!isDynamic)
         {
             ScaleVisual();
         }
         
-        physicalRadiusChange = Mathf.Round(physicalRadiusChange * 20f) / 20f;
-
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (isDynamic)
@@ -73,12 +77,12 @@ public class TestController : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            visualRadiusChange = Math.Min(visualRadiusChange + 0.1f, 2.0f);
+            visualRadius = Math.Min(visualRadius + 0.1f, 2.0f);
             ScaleVisual();
         }
         if (Input.GetKeyDown(KeyCode.A))
         {
-            visualRadiusChange = Math.Max(visualRadiusChange - 0.1f, 0.0f);
+            visualRadius = Math.Max(visualRadius - 0.1f, 0.0f);
             ScaleVisual();
         }
         if (Input.GetKeyDown(KeyCode.E))
@@ -88,6 +92,10 @@ public class TestController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.D))
         {
             physicalRadiusChange = Math.Max(physicalRadiusChange - 0.1f, 0.0f);
+        }
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            sphere.SetActive(true);
         }
 
         if (tracking)
@@ -103,10 +111,11 @@ public class TestController : MonoBehaviour
 
     public void ScaleAll(bool twoHand = false) {
         ScaleVisual();
-        ScalePhysical(twoHand);
+        //ScalePhysical(twoHand);
 
         sphere.transform.position = homePos;
-        float visualOffset = (physicalRadiusChange - visualRadiusChange) * 0.01f;
+        //float visualOffset = (physicalRadiusChange - visualRadius) * 0.01f;
+        float visualOffset = (60f - visualRadius) * 0.001f;
         sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
     }
 
@@ -114,7 +123,8 @@ public class TestController : MonoBehaviour
     {
         //calibOffsetOneHand.y = originalOffsety;
 
-        float scaleVal = changeMapping[visualRadiusChange];
+        //float scaleVal = changeMapping[visualRadiusChange];
+        float scaleVal = visualRadius * 0.002f;
         sphere.transform.localScale = new Vector3(scaleVal, scaleVal, scaleVal);
         //if (dataController.fixedFactor == CongruencyDataController.FixedFactor.fixedVolume) {
             //sphere.transform.localPosition = new Vector3(homePos.x, homePos.y - (changeMapping[visualRadiusChange] - 0.1258f) + 0.0150f, homePos.z);
@@ -124,16 +134,16 @@ public class TestController : MonoBehaviour
 
     public void CalibrateVisual()
     {
-        if (dataController.technique == CongruencyDataController.Technique.oneHand)
-        {
-            //sphere.transform.position = hand.position + calibOffsetOneHand;
-        }
-        else
-        {
-            Vector3 leftHandPos = GameObject.Find("[BuildingBlock] Hand Tracking left").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal").transform.position;
-            Vector3 rightHandPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal").position;
-            sphere.transform.position = ((leftHandPos + rightHandPos) / 2) + calibOffsetTwoHand;
-        }
+        //if (dataController.technique == CongruencyDataController.Technique.oneHand)
+        //{
+        //    //sphere.transform.position = hand.position + calibOffsetOneHand;
+        //}
+        //else
+        //{
+        //    Vector3 leftHandPos = GameObject.Find("[BuildingBlock] Hand Tracking left").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal").transform.position;
+        //    Vector3 rightHandPos = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal").position;
+        //    sphere.transform.position = ((leftHandPos + rightHandPos) / 2) + calibOffsetTwoHand;
+        //}
         homePos = sphere.transform.position;
     }
 
@@ -174,13 +184,19 @@ public class TestController : MonoBehaviour
         float elapsed = 0f;
         float duration = 2.0f / physicalSpeed;
 
+        if (limitDynamicTime)
+        {
+            duration = dynamicTime;
+        }
+
         float startRadius = (direction == 1) ? 0.0f : 2.0f;
         float endRadius = (direction == 1) ? 2.0f : 0.0f;
         serialController.GoTo((int)(startRadius / 2f * 100), false, true, true);
 
         while (elapsed <= duration)
         {
-            float t = elapsed / duration;
+            //float t = elapsed / duration;
+            float t = elapsed / (2.0f / physicalSpeed);
             physicalRadiusChange = Mathf.Lerp(startRadius, endRadius, t);
             serialController.GoTo((int)(physicalRadiusChange / 2f * 100), false, true, true);
 
@@ -188,7 +204,14 @@ public class TestController : MonoBehaviour
             yield return new WaitForSeconds(dynamicStepDuration);
         }
 
-        serialController.GoTo((int)(endRadius / 2f * 100), false);
+        if (!limitDynamicTime) {
+            physicalRadiusChange = endRadius;
+            serialController.GoTo((int)(endRadius / 2f * 100), false);
+        } else {
+            float t = dynamicTime / (2.0f / physicalSpeed);
+            physicalRadiusChange = Mathf.Lerp(startRadius, endRadius, t);
+            serialController.GoTo((int)(physicalRadiusChange / 2f * 100), false);
+        }
     }
 
     public IEnumerator DynamicVisual(int direction)
@@ -196,6 +219,11 @@ public class TestController : MonoBehaviour
         float elapsed = 0f;
         //float duration = 2.0f / visualSpeed;
         float duration = 2.0f / physicalSpeed;
+
+        if (limitDynamicTime)
+        {
+            duration = dynamicTime;
+        }
 
         float forwardEnd = (visualSpeed / physicalSpeed) * 2;
         float backwardEnd = (forwardEnd - 2) * -1;
@@ -223,8 +251,9 @@ public class TestController : MonoBehaviour
 
         while (elapsed <= duration)
         {
-            float t = elapsed / duration;
-         
+            //float t = elapsed / duration;
+            float t = elapsed / (2.0f / physicalSpeed);
+
             sphere.transform.localScale = Vector3.Lerp(new Vector3(startScale, startScale, startScale), new Vector3(endScale, endScale, endScale), t);
 
             sphere.transform.position = homePos;

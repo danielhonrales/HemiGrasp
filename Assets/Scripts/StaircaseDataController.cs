@@ -120,7 +120,7 @@ public class StaircaseDataController : MonoBehaviour
             csvData[currentTrial][dataIndex[adaptiveFactor]] = (float.Parse(csvData[prevTrial][dataIndex[adaptiveFactor]]) + float.Parse(csvData[prevTrial][dataIndex["step"]])).ToString();
         }
 
-        testController.visualRadiusChange = float.Parse(csvData[currentTrial][dataIndex["visualSize"]]);
+        testController.visualRadius = float.Parse(csvData[currentTrial][dataIndex["visualSize"]]);
         testController.physicalRadiusChange = float.Parse(csvData[currentTrial][dataIndex["volumeSize"]]);
 
         testController.sphere.SetActive(true);

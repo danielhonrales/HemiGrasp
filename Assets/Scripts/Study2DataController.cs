@@ -100,7 +100,7 @@ public class Study2DataController : MonoBehaviour
     public void LoadTrial()
     {
         string[] trialData = csvData[currentTrial];
-        Debug.Log($"Trial {trialData[dataIndex["trial"]]}: physicalSpeed={trialData[dataIndex["physicalSpeed"]]}, visualSpeed={trialData[dataIndex["visualSpeed"]]}, Congruent={trialData[dataIndex["congruent"]]}");
+        Debug.Log($"Trial {trialData[dataIndex["trial"]]}: physicalVelocity={trialData[dataIndex["physicalVelocity"]]}, visualMultiplier={trialData[dataIndex["visualMultiplier"]]}, Congruent={trialData[dataIndex["congruent"]]}");
 
         testController.sphere.SetActive(true);
 
@@ -108,6 +108,8 @@ public class Study2DataController : MonoBehaviour
         testController.physicalSpeed = Math.Abs(physicalVal);
         testController.dynamicForward = Math.Sign(physicalVal) >= 0;
         testController.visualSpeed = float.Parse(csvData[currentTrial][dataIndex["visualMultiplier"]]) * testController.physicalSpeed;
+
+        testController.DynamicAll();
 
         //testController.ScaleVisual();
         //testController.ScalePhysical();
@@ -134,6 +136,13 @@ public class Study2DataController : MonoBehaviour
 
         SaveData();
         testController.sphere.SetActive(false);
+
+        if (currentTrial + 1 < totalTrials)
+        {
+            float physicalVal = float.Parse(csvData[currentTrial + 1][dataIndex["physicalVelocity"]]);
+            testController.physicalRadiusChange = (Math.Sign(physicalVal) >= 0) ? 0 : 2;
+            testController.ScalePhysical();
+        }
     }
     
     public void SaveData()

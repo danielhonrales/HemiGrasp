@@ -101,8 +101,11 @@ public class CongruencyDataController : MonoBehaviour
         string[] trialData = csvData[currentTrial];
         Debug.Log($"Trial {trialData[dataIndex["trial"]]}: physicalSize={trialData[dataIndex["physicalSize"]]}, visualSize={trialData[dataIndex["visualSize"]]}, Congruent={trialData[dataIndex["congruent"]]}");
 
-        testController.visualRadiusChange = float.Parse(csvData[currentTrial][dataIndex["visualSize"]]);
-        testController.physicalRadiusChange = float.Parse(csvData[currentTrial][dataIndex["physicalSize"]]);
+        //testController.visualRadius = float.Parse(csvData[currentTrial][dataIndex["visualSize"]]);
+        //testController.physicalRadiusChange = float.Parse(csvData[currentTrial][dataIndex["physicalSize"]]);
+
+        testController.physicalRadius = float.Parse(csvData[currentTrial][dataIndex["physicalSize"]]);
+        testController.visualRadius = testController.physicalRadius * (float.Parse(csvData[currentTrial][dataIndex["visualSize"]]) / 100f);
 
         //testController.ScaleVisual();
         //testController.ScalePhysical();
@@ -113,7 +116,7 @@ public class CongruencyDataController : MonoBehaviour
             testController.ScaleAll(true);
         }
 
-        testController.sphere.SetActive(true);
+        //testController.sphere.SetActive(true); 
     }
 
     public void NextTrial()
