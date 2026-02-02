@@ -229,7 +229,7 @@ for pid in pids:
     
     
 # ===============================
-# Gradient Bars
+# Gradient Bars with Highlight
 # ===============================
 
 df_trials = pd.concat(all_trials, ignore_index=True)
@@ -251,62 +251,67 @@ heatmap_df = acceptance.pivot(
     values="congruent"
 )
 
-print(heatmap_df)
-
 # Sort axes (important for clean rendering)
 heatmap_df = heatmap_df.sort_index()
 heatmap_df = heatmap_df.sort_index(axis=1)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 
-
-bar_width = 4 # skinny bar width in mm
-
+bar_width = 4  # skinny bar width in mm
 
 for p in heatmap_df.columns:
     col = heatmap_df[p].dropna()
-
-
     y = col.index.values
     z = col.values.reshape(-1, 1)
 
+    y_min_ext = y.min()
+    y_max_ext = y.max()
+    n = len(z)
 
+    # Plot the gradient bar
     ax.imshow(
-    z,
-    extent=[
-    p - bar_width / 2,
-    p + bar_width / 2,
-    y.min(),
-    y.max()
-    ],
-    origin="lower",
-    aspect="auto",
-    cmap="magma",
-    vmin=0,
-    vmax=1,
-    interpolation="bicubic"
-)
+        z,
+        extent=[
+            p - bar_width / 2,
+            p + bar_width / 2,
+            y_min_ext,
+            y_max_ext
+        ],
+        origin="lower",
+        aspect="auto",
+        cmap="magma",
+        vmin=0,
+        vmax=1,
+        interpolation="bicubic"
+    )
 
+    # Draw tick line for probability >= 0.7
+    mask = col.values >= 0.7
+    if mask.any():
+        idxs = np.where(mask)[0]
+        y_coords = y_min_ext + (y_max_ext - y_min_ext) * (idxs / (n - 1))
+        y_low = y_coords[0]
+        y_high = y_coords[-1]
+
+        # Draw small tick line at the left side of the bar
+        tick_x = p + bar_width / 2 + 0.5  # slightly left of bar
+        ax.plot([tick_x, tick_x], [y_low, y_high], color='gray', linewidth=2)
 
 # Axes formatting
 ax.set_xticks(np.arange(0, 121, 20))
 ax.set_yticks(np.arange(0, 241, 20))
 
-
 ax.set_xlim(0, 140)
 ax.set_ylim(0, 260)
-
 
 ax.set_xlabel("Physical Size (mm)")
 ax.set_ylabel("True Visual Size (mm)")
 ax.set_title("Acceptance Bands by Physical Size")
 
-
 # Colorbar
 sm = plt.cm.ScalarMappable(cmap="magma", norm=plt.Normalize(0, 1))
 cbar = plt.colorbar(sm, ax=ax)
 cbar.set_label("P(Congruent Response)")
-
 
 plt.tight_layout()
 
