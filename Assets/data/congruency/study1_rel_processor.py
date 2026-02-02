@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 # Load data
-pids = [1, 2, 3, 4, 5]
+pids = [1, 2, 3]
 
 all_trials = []
 all_data = []
@@ -68,10 +68,10 @@ for pid in pids:
         capsize=5
     )
 
-    plt.xlabel("Physical Size (mm)")
-    plt.ylabel("Relative Visual Size (%)")
-    plt.xticks(np.arange(0, 130, 20))
-    plt.yticks(np.arange(50, 210, 50))
+    plt.xlabel("Physical Size")
+    plt.ylabel("Relative Visual Size")
+    plt.xticks(np.arange(0, 140, 20))
+    plt.yticks(np.arange(25, 225, 25))
     plt.title(f"P{pid}")
 
     #plt.show()
@@ -125,10 +125,10 @@ plt.errorbar(
         capsize=5
     )
 
-plt.xlabel("Physical Size (mm)")
-plt.ylabel("Relative Visual Size (%)")
-plt.xticks(np.arange(0, 130, 20))
-plt.yticks(np.arange(50, 210, 50))
+plt.xlabel("Physical Size")
+plt.ylabel("Relative Visual Size")
+plt.xticks(np.arange(0, 140, 20))
+plt.yticks(np.arange(25, 225, 25))
 plt.title("All Participants Combined")
 
 save_path = f"{home_path}\\output\\all_participants.png"
@@ -149,32 +149,32 @@ acceptance = (
     .reset_index()
 )
 
+plt.figure(figsize=(16, 6))
+
 physical_levels = sorted(acceptance["physicalSize"].unique())
 cmap = cm.gnuplot
 colors = cmap(np.linspace(0, .85, len(physical_levels)))
 
-plt.figure(figsize=(12, 6))
-
-acceptance["trueVisualSize"] = acceptance["physicalSize"] * (acceptance["visualSize"] / 100)
+plt.figure(figsize=(16, 6))
 
 for p, color in zip(physical_levels, colors):
     subset = acceptance[acceptance["physicalSize"] == p]
 
     plt.plot(
-        subset["trueVisualSize"],
+        ((subset["visualSize"] / 100) * p),
         subset["congruent"],
         marker="o",
         color=color,
-        label=f"{p} mm"
+        label=f"physicalSize = {p}"
     )
 
 plt.axhline(0.70, linestyle="--", linewidth=1, color="gray")
-plt.xticks(np.arange(0, 250, 20))
-plt.yticks(np.arange(0, 1.1, .1))
-plt.xlabel("True Visual Size (mm)")
+plt.yticks(np.arange(0, 1.01, 0.1))
+plt.xlabel("Visual Size")
 plt.ylabel("P(Congruent Response)")
 plt.title("Congruent Probability Curves")
-plt.legend(title="Physical Size (mm)")
+plt.ylim(0, 1.05)
+plt.legend(title="Physical Size")
 
 save_path = f"{home_path}\\output\\acceptance_curves.png"
 plt.savefig(save_path, dpi=300, bbox_inches="tight")
@@ -201,121 +201,27 @@ for pid in pids:
     physical_levels = sorted(acceptance_p["physicalSize"].unique())
     colors = cmap(np.linspace(0, .85, len(physical_levels)))
 
-    plt.figure(figsize=(12, 6))
-    
-    acceptance_p["trueVisualSize"] = acceptance["physicalSize"] * acceptance["visualSize"] / 100
+    plt.figure(figsize=(16, 6))
+
     for p, color in zip(physical_levels, colors):
         subset = acceptance_p[acceptance_p["physicalSize"] == p]
 
         plt.plot(
-            subset["trueVisualSize"],
+            ((subset["visualSize"] / 100) * p),
             subset["congruent"],
             marker="o",
             color=color,
-            label=f"{p} mm"
+            label=f"physicalSize = {p}"
         )
 
     plt.axhline(0.70, linestyle="--", linewidth=1, color="gray")
-    plt.xticks(np.arange(0, 250, 20))
-    plt.yticks(np.arange(0, 1.1, .1))
-    plt.xlabel("True Visual Size (mm)")
+    plt.yticks(np.arange(0, 1.01, 0.1))
+    plt.xlabel("Visual Size")
     plt.ylabel("P(Congruent Response)")
     plt.title(f"Participant {pid} – Acceptance Curves")
-    plt.legend(title="Physical Size (mm)")
+    plt.ylim(0, 1.05)
+    plt.legend(title="Physical Size")
 
     save_path = f"{home_path}\\output\\p{pid}_acceptance_curves.png"
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
-    
-    
-# ===============================
-# Gradient Bars with Highlight
-# ===============================
-
-df_trials = pd.concat(all_trials, ignore_index=True)
-
-acceptance = (
-    df_trials
-    .groupby(["physicalSize", "visualSize"])["congruent"]
-    .mean()
-    .reset_index()
-)
-
-acceptance["trueVisualSize"] = (
-    acceptance["physicalSize"] * (acceptance["visualSize"] / 100)
-)
-
-heatmap_df = acceptance.pivot(
-    index="trueVisualSize",
-    columns="physicalSize",
-    values="congruent"
-)
-
-# Sort axes (important for clean rendering)
-heatmap_df = heatmap_df.sort_index()
-heatmap_df = heatmap_df.sort_index(axis=1)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-
-bar_width = 4  # skinny bar width in mm
-
-for p in heatmap_df.columns:
-    col = heatmap_df[p].dropna()
-    y = col.index.values
-    z = col.values.reshape(-1, 1)
-
-    y_min_ext = y.min()
-    y_max_ext = y.max()
-    n = len(z)
-
-    # Plot the gradient bar
-    ax.imshow(
-        z,
-        extent=[
-            p - bar_width / 2,
-            p + bar_width / 2,
-            y_min_ext,
-            y_max_ext
-        ],
-        origin="lower",
-        aspect="auto",
-        cmap="magma",
-        vmin=0,
-        vmax=1,
-        interpolation="bicubic"
-    )
-
-    # Draw tick line for probability >= 0.7
-    mask = col.values >= 0.7
-    if mask.any():
-        idxs = np.where(mask)[0]
-        y_coords = y_min_ext + (y_max_ext - y_min_ext) * (idxs / (n - 1))
-        y_low = y_coords[0]
-        y_high = y_coords[-1]
-
-        # Draw small tick line at the left side of the bar
-        tick_x = p + bar_width / 2 + 0.5  # slightly left of bar
-        ax.plot([tick_x, tick_x], [y_low, y_high], color='gray', linewidth=2)
-
-# Axes formatting
-ax.set_xticks(np.arange(0, 121, 20))
-ax.set_yticks(np.arange(0, 241, 20))
-
-ax.set_xlim(0, 140)
-ax.set_ylim(0, 260)
-
-ax.set_xlabel("Physical Size (mm)")
-ax.set_ylabel("True Visual Size (mm)")
-ax.set_title("Acceptance Bands by Physical Size")
-
-# Colorbar
-sm = plt.cm.ScalarMappable(cmap="magma", norm=plt.Normalize(0, 1))
-cbar = plt.colorbar(sm, ax=ax)
-cbar.set_label("P(Congruent Response)")
-
-ax.grid(axis='y', linestyle='--', alpha=0.7)
-plt.tight_layout()
-
-save_path = f"{home_path}\\output\\gradients.png"
-plt.savefig(save_path, dpi=300, bbox_inches="tight")
-plt.close()
