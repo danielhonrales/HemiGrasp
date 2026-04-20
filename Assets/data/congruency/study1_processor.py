@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 # Load data
-pids = [1, 2, 3, 4, 5]
+pids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 all_trials = []
 all_data = []
