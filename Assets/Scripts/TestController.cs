@@ -10,6 +10,18 @@ using UnityEngine.InputSystem;
 public class TestController : MonoBehaviour
 {
 
+    public enum PhysicalObject {
+        Sphere,
+        Grapefruit,
+        Basketball,
+        Football,
+        PiggyBank,
+        Shell
+    }
+
+    public PhysicalObject activeObject = PhysicalObject.Sphere;
+    private PhysicalObject previousObject = PhysicalObject.Sphere;
+
     [Header("TestControl"), Space(10)]
     public int trialNumber;
     [Range(10f, 240f)]
@@ -38,6 +50,18 @@ public class TestController : MonoBehaviour
     public SerialController serialController;
     //public CongruencyDataController dataController;
 
+    public GameObject grapefruit;
+    public GameObject basketball;
+    public GameObject football;
+    public GameObject piggyBank;
+    public GameObject shell;
+
+    public Vector3 grapefruitOffset;
+    public Vector3 basketballOffset;
+    public Vector3 footballOffset;
+    public Vector3 piggyBankOffset;
+    public Vector3 shellOffset;
+
     private float originalOffsety;
     private Transform hand;
 
@@ -46,11 +70,58 @@ public class TestController : MonoBehaviour
     {
         originalOffsety = calibOffsetOneHand.y;
         hand = GameObject.Find("[BuildingBlock] Hand Tracking right").transform.Find("Bones").Find("XRHand_Wrist").Find("XRHand_MiddleMetacarpal").Find("XRHand_MiddleProximal");
+
+        grapefruit.SetActive(false);
+        basketball.SetActive(false);
+        football.SetActive(false);
+        piggyBank.SetActive(false);
+        shell.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (previousObject != activeObject) {
+            previousObject = activeObject;
+
+            sphere.SetActive(false);
+            grapefruit.SetActive(false);
+            basketball.SetActive(false);
+            football.SetActive(false);
+            piggyBank.SetActive(false);
+            shell.SetActive(false);
+
+            switch (activeObject) {
+                case PhysicalObject.Sphere:
+                    sphere.SetActive(true);
+                    break;
+                case PhysicalObject.Grapefruit:
+                    grapefruit.SetActive(true);
+                    break;
+                case PhysicalObject.Basketball:
+                    basketball.SetActive(true);
+                    break;
+                case PhysicalObject.Football:
+                    football.SetActive(true);
+                    break;
+                case PhysicalObject.PiggyBank:
+                    piggyBank.SetActive(true);
+                    break;
+                case PhysicalObject.Shell:
+                    shell.SetActive(true);
+                    break;
+                default:
+                    sphere.SetActive(true);
+                    break;
+            }
+        }
+
+        grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+        basketball.transform.position = sphere.transform.position + basketballOffset;
+        football.transform.position = sphere.transform.position + footballOffset;
+        piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+        shell.transform.position = sphere.transform.position + shellOffset;
+
         visualRadius = Mathf.Round(visualRadius * 20f) / 20f;
         physicalRadiusChange = Mathf.Round(physicalRadiusChange * 20f) / 20f;
         physicalRadius = Mathf.Round(physicalRadius * 20f) / 20f;

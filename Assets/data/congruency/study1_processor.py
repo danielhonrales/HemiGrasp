@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
+import matplotlib.patches as patches
+import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import os
 import numpy as np
@@ -285,7 +287,9 @@ for p in heatmap_df.columns:
         interpolation="bicubic"
     )
 
-    # Draw tick line for probability >= 0.7
+    plt.rcParams["hatch.linewidth"] = 2.0
+
+    # Draw hatched box overlay for probability >= 0.7
     mask = col.values >= 0.7
     if mask.any():
         idxs = np.where(mask)[0]
@@ -293,9 +297,34 @@ for p in heatmap_df.columns:
         y_low = y_coords[0]
         y_high = y_coords[-1]
 
-        # Draw small tick line at the left side of the bar
-        tick_x = p + bar_width / 2 + 0.5  # slightly left of bar
-        ax.plot([tick_x, tick_x], [y_low, y_high], color='gray', linewidth=2)
+        # Draw a hatched box overlaid on the bar
+        box_x = p - bar_width / 2  # left edge of bar
+        box_width = bar_width
+        box_height = y_high - y_low
+
+        hatch_patch = patches.Rectangle(
+            (box_x, y_low),
+            box_width,
+            box_height,
+            linewidth=0,
+            edgecolor='gray',
+            facecolor='none',
+            hatch='////',   # diagonal stripes
+            alpha=0.8
+        )
+        ax.add_patch(hatch_patch)
+
+# Add legend for hatched box
+legend_patch = patches.Rectangle(
+    (0, 0), 1, 1,
+    linewidth=0,
+    edgecolor='gray',
+    facecolor='none',
+    hatch='////',
+    alpha=0.8,
+    label='P ≥ 0.7'
+)
+ax.legend(handles=[legend_patch], loc='upper left')
 
 # Axes formatting
 ax.set_xticks(np.arange(0, 121, 20))
@@ -317,5 +346,492 @@ ax.grid(axis='y', linestyle='--', alpha=0.7)
 plt.tight_layout()
 
 save_path = f"{home_path}\\output\\gradients.png"
+plt.savefig(save_path, dpi=300, bbox_inches="tight")
+plt.close()
+
+# ===============================
+# Gradient Bars with Highlight and Relative Subplot
+# ===============================
+
+df_trials = pd.concat(all_trials, ignore_index=True)
+
+acceptance = (
+    df_trials
+    .groupby(["physicalSize", "visualSize"])["congruent"]
+    .mean()
+    .reset_index()
+)
+
+acceptance["trueVisualSize"] = (
+    acceptance["physicalSize"] * (acceptance["visualSize"] / 100)
+)
+
+heatmap_df = acceptance.pivot(
+    index="trueVisualSize",
+    columns="physicalSize",
+    values="congruent"
+)
+
+heatmap_df = heatmap_df.sort_index()
+heatmap_df = heatmap_df.sort_index(axis=1)
+
+# Second heatmap using raw visualSize
+heatmap_df2 = acceptance.pivot(
+    index="visualSize",
+    columns="physicalSize",
+    values="congruent"
+)
+
+heatmap_df2 = heatmap_df2.sort_index()
+heatmap_df2 = heatmap_df2.sort_index(axis=1)
+
+plt.rcParams["hatch.linewidth"] = 2.0
+
+fig, (ax, ax2) = plt.subplots(
+    2, 1,
+    figsize=(10, 9),
+    gridspec_kw={"height_ratios": [2, 1]}
+)
+
+def draw_gradient_bars(axis, df, bar_width=4):
+    for p in df.columns:
+        col = df[p].dropna()
+        y = col.index.values
+        z = col.values.reshape(-1, 1)
+
+        y_min_ext = y.min()
+        y_max_ext = y.max()
+        n = len(z)
+
+        axis.imshow(
+            z,
+            extent=[
+                p - bar_width / 2,
+                p + bar_width / 2,
+                y_min_ext,
+                y_max_ext
+            ],
+            origin="lower",
+            aspect="auto",
+            cmap="magma",
+            vmin=0,
+            vmax=1,
+            interpolation="bicubic"
+        )
+
+        mask = col.values >= 0.7
+        if mask.any():
+            idxs = np.where(mask)[0]
+            y_coords = y_min_ext + (y_max_ext - y_min_ext) * (idxs / (n - 1))
+            y_low = y_coords[0]
+            y_high = y_coords[-1]
+
+            hatch_patch = patches.Rectangle(
+                (p - bar_width / 2, y_low),
+                bar_width,
+                y_high - y_low,
+                linewidth=0,
+                edgecolor='gray',
+                facecolor='none',
+                hatch='////',
+                alpha=1.0
+            )
+            axis.add_patch(hatch_patch)
+
+# Draw both subplots
+draw_gradient_bars(ax, heatmap_df, bar_width=6)
+draw_gradient_bars(ax2, heatmap_df2, bar_width=6)
+
+# Legend (shared style, added to both)
+legend_patch = patches.Rectangle(
+    (0, 0), 1, 1,
+    linewidth=0,
+    edgecolor='gray',
+    facecolor='none',
+    hatch='////',
+    alpha=1.0,
+    label='P ≥ 0.7'
+)
+ax.legend(handles=[legend_patch], loc='upper left')
+ax2.legend(handles=[legend_patch], loc='upper left')
+
+# Main plot formatting
+ax.set_xticks(np.arange(0, 121, 20))
+ax.set_yticks(np.arange(0, 241, 20))
+ax.set_xlim(0, 140)
+ax.set_ylim(0, 260)
+ax.set_xticklabels([])              # hide x tick labels on main plot
+ax.set_xlabel("")                   # no x label on main plot
+ax.set_ylabel("True Visual Size (mm)")
+ax.set_title("Acceptance Bands by Physical Size")
+ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+# Subplot formatting
+ax2.set_xticks(np.arange(0, 121, 20))
+ax2.set_xlim(0, 140)
+ax2.set_xlabel("Physical Size (mm)")   # only here
+ax2.set_yticks(np.arange(50, 201, 25))
+ax2.set_ylim(50, 200)
+ax2.set_ylabel("Relative Visual Size (%)")
+ax2.set_title("")                       # no title
+ax2.grid(axis='y', linestyle='--', alpha=0.7)
+
+plt.tight_layout(rect=[0, 0, 0.88, 1])
+fig.subplots_adjust(hspace=0.08)    # call after tight_layout to override spacing
+
+# Get the actual positions of the two subplots after layout
+pos_top = ax.get_position()
+pos_bot = ax2.get_position()
+
+# Span from bottom of lower subplot to top of upper subplot
+cbar_ax = fig.add_axes([
+    0.90,                          # left position
+    pos_bot.y0,                    # bottom of lower subplot
+    0.02,                          # width
+    pos_top.y1 - pos_bot.y0        # height: top of upper to bottom of lower
+])
+
+sm = plt.cm.ScalarMappable(cmap="magma", norm=plt.Normalize(0, 1))
+cbar = fig.colorbar(sm, cax=cbar_ax)
+cbar.set_label("P(Congruent Response)")
+
+save_path = f"{home_path}\\output\\gradients_dual.png"
+plt.savefig(save_path, dpi=300, bbox_inches="tight")
+plt.close()
+
+# ===============================
+# Solid Black with Hatch and Relative Subplot
+# ===============================
+
+df_trials = pd.concat(all_trials, ignore_index=True)
+
+acceptance = (
+    df_trials
+    .groupby(["physicalSize", "visualSize"])["congruent"]
+    .mean()
+    .reset_index()
+)
+
+acceptance["trueVisualSize"] = (
+    acceptance["physicalSize"] * (acceptance["visualSize"] / 100)
+)
+
+heatmap_df = acceptance.pivot(
+    index="trueVisualSize",
+    columns="physicalSize",
+    values="congruent"
+)
+
+heatmap_df = heatmap_df.sort_index()
+heatmap_df = heatmap_df.sort_index(axis=1)
+
+# Second heatmap using raw visualSize
+heatmap_df2 = acceptance.pivot(
+    index="visualSize",
+    columns="physicalSize",
+    values="congruent"
+)
+
+heatmap_df2 = heatmap_df2.sort_index()
+heatmap_df2 = heatmap_df2.sort_index(axis=1)
+
+plt.rcParams["hatch.linewidth"] = 2.0
+
+fig, (ax, ax2) = plt.subplots(
+    2, 1,
+    figsize=(10, 9),
+    gridspec_kw={"height_ratios": [2, 1]}
+)
+
+def draw_bars_top(axis, df, bar_width=4):
+    """Top subplot: hatched over full range, solid black over P >= 0.7 range."""
+    for p in df.columns:
+        col = df[p].dropna()
+        y = col.index.values
+        n = len(y)
+        y_min_ext = y.min()
+        y_max_ext = y.max()
+
+        # Hatched rectangle over full range
+        hatch_patch = patches.Rectangle(
+            (p - bar_width / 2, y_min_ext),
+            bar_width,
+            y_max_ext - y_min_ext,
+            linewidth=0.5,
+            edgecolor='#416cc1',
+            facecolor='none',
+            hatch='////',
+            alpha=0.8
+        )
+        axis.add_patch(hatch_patch)
+
+        # Solid black rectangle over P >= 0.7 range
+        mask = col.values >= 0.7
+        if mask.any():
+            idxs = np.where(mask)[0]
+            y_coords = y_min_ext + (y_max_ext - y_min_ext) * (idxs / (n - 1))
+            y_low = y_coords[0]
+            y_high = y_coords[-1]
+
+            solid_patch = patches.Rectangle(
+                (p - bar_width / 2, y_low),
+                bar_width,
+                y_high - y_low,
+                linewidth=0,
+                edgecolor='none',
+                facecolor='#416cc1',
+                alpha=1.0
+            )
+            axis.add_patch(solid_patch)
+
+
+def draw_bars_bottom(axis, df, bar_width=4):
+    """Bottom subplot: hatched over full range, solid black over P >= 0.7 range."""
+    for p in df.columns:
+        col = df[p].dropna()
+        y = col.index.values
+        n = len(y)
+        y_min_ext = y.min()
+        y_max_ext = y.max()
+
+        # Hatched rectangle over full range
+        hatch_patch = patches.Rectangle(
+            (p - bar_width / 2, y_min_ext),
+            bar_width,
+            y_max_ext - y_min_ext,
+            linewidth=0.5,
+            edgecolor='#416cc1',
+            facecolor='none',
+            hatch='////',
+            alpha=0.8
+        )
+        axis.add_patch(hatch_patch)
+
+        # Solid black rectangle over P >= 0.7 range
+        mask = col.values >= 0.7
+        if mask.any():
+            idxs = np.where(mask)[0]
+            y_coords = y_min_ext + (y_max_ext - y_min_ext) * (idxs / (n - 1))
+            y_low = y_coords[0]
+            y_high = y_coords[-1]
+
+            solid_patch = patches.Rectangle(
+                (p - bar_width / 2, y_low),
+                bar_width,
+                y_high - y_low,
+                linewidth=0,
+                edgecolor='none',
+                facecolor='#416cc1',
+                alpha=1.0
+            )
+            axis.add_patch(solid_patch)
+
+# Draw both subplots
+draw_bars_top(ax, heatmap_df, bar_width=6)
+draw_bars_bottom(ax2, heatmap_df2, bar_width=6)
+
+ax2.axhline(y=100, color='0.3', linewidth=1.2, linestyle='-', zorder=3)
+
+# Legend
+hatch_patch_legend = patches.Rectangle(
+    (0, 0), 1, 1,
+    linewidth=0.5,
+    edgecolor='#416cc1',
+    facecolor='none',
+    hatch='////',
+    alpha=0.8,
+    label='Full range tested'
+)
+solid_patch_legend = patches.Rectangle(
+    (0, 0), 1, 1,
+    linewidth=0,
+    edgecolor='none',
+    facecolor='#416cc1',
+    label='P ≥ 0.7'
+)
+ax.legend(handles=[hatch_patch_legend, solid_patch_legend], loc='upper left')
+# ax2.legend(handles=[hatch_patch_legend, solid_patch_legend], loc='upper left')
+
+# Main plot formatting
+ax.set_xticks(np.arange(0, 121, 20))
+ax.set_yticks(np.arange(0, 241, 20))
+ax.set_xlim(0, 140)
+ax.set_ylim(0, 260)
+ax.set_xticklabels([])
+ax.set_xlabel("")
+ax.set_ylabel("True Visual Size (mm)")
+ax.set_title("Acceptance Bands by Physical Size")
+ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+# Subplot formatting
+ax2.set_xticks(np.arange(0, 121, 20))
+ax2.set_xlim(0, 140)
+ax2.set_xlabel("Physical Size (mm)")
+ax2.set_yticks(np.arange(50, 201, 25))
+ax2.set_ylim(50, 200)
+ax2.set_ylabel("Relative Visual Size (%)")
+ax2.set_title("")
+ax2.grid(axis='y', linestyle='--', alpha=0.7)
+
+plt.tight_layout()
+fig.subplots_adjust(hspace=0.08)
+
+save_path = f"{home_path}\\output\\solid_dual.png"
+plt.savefig(save_path, dpi=300, bbox_inches="tight")
+plt.close()
+
+# ===============================
+# Pastel Rainbow Colors by Physical Size
+# ===============================
+
+df_trials = pd.concat(all_trials, ignore_index=True)
+
+acceptance = (
+    df_trials
+    .groupby(["physicalSize", "visualSize"])["congruent"]
+    .mean()
+    .reset_index()
+)
+
+acceptance["trueVisualSize"] = (
+    acceptance["physicalSize"] * (acceptance["visualSize"] / 100)
+)
+
+heatmap_df = acceptance.pivot(
+    index="trueVisualSize",
+    columns="physicalSize",
+    values="congruent"
+)
+heatmap_df = heatmap_df.sort_index()
+heatmap_df = heatmap_df.sort_index(axis=1)
+
+heatmap_df2 = acceptance.pivot(
+    index="visualSize",
+    columns="physicalSize",
+    values="congruent"
+)
+heatmap_df2 = heatmap_df2.sort_index()
+heatmap_df2 = heatmap_df2.sort_index(axis=1)
+
+# --- Pastel rainbow color map per physical size ---
+all_physical_sizes = sorted(set(list(heatmap_df.columns) + list(heatmap_df2.columns)))
+n_sizes = len(all_physical_sizes)
+
+pastel_colors = [
+    mcolors.hsv_to_rgb([i / n_sizes, 0.55, 0.85])  # higher saturation, lower value = darker
+    for i in range(n_sizes)
+]
+color_map = dict(zip(all_physical_sizes, pastel_colors))
+
+plt.rcParams["hatch.linewidth"] = 2.0
+
+fig, (ax, ax2) = plt.subplots(
+    2, 1,
+    figsize=(10, 9),
+    gridspec_kw={"height_ratios": [2, 1]}
+)
+
+def draw_bars(axis, df, bar_width=4):
+    for p in df.columns:
+        col = df[p].dropna()
+        y = col.index.values
+        n = len(y)
+        y_min_ext = y.min()
+        y_max_ext = y.max()
+
+        base_color = color_map[p]
+
+        # Hatched rectangle — NO fill, just colored hatch lines
+        hatch_patch = patches.Rectangle(
+            (p - bar_width / 2, y_min_ext),
+            bar_width,
+            y_max_ext - y_min_ext,
+            linewidth=0.5,
+            edgecolor=base_color,   # hatch lines in pastel color
+            facecolor='none',       # no fill, just like the original
+            hatch='////',
+            alpha=1.0
+        )
+        axis.add_patch(hatch_patch)
+
+        # Solid rectangle over P >= 0.7 — filled with pastel color
+        mask = col.values >= 0.7
+        if mask.any():
+            idxs = np.where(mask)[0]
+            y_coords = y_min_ext + (y_max_ext - y_min_ext) * (idxs / (n - 1))
+            y_low = y_coords[0]
+            y_high = y_coords[-1]
+
+            solid_patch = patches.Rectangle(
+                (p - bar_width / 2, y_low),
+                bar_width,
+                y_high - y_low,
+                linewidth=0,
+                edgecolor='none',
+                facecolor=base_color,   # solid pastel fill
+                alpha=1.0
+            )
+            axis.add_patch(solid_patch)
+
+draw_bars(ax, heatmap_df, bar_width=6)
+draw_bars(ax2, heatmap_df2, bar_width=6)
+
+ax2.axhline(y=100, color='0.3', linewidth=1.2, linestyle='-', zorder=3)
+
+# --- Legend ---
+# Per-size color swatches
+size_legend_handles = [
+    patches.Patch(facecolor=color_map[p], edgecolor='gray', label=f'{p} mm')
+    for p in all_physical_sizes
+]
+
+# Style indicators using a neutral gray to avoid color confusion
+hatch_patch_legend = patches.Rectangle(
+    (0, 0), 1, 1,
+    linewidth=0.5,
+    edgecolor='gray',
+    facecolor='none',       # no fill, matches the actual bars
+    hatch='////',
+    label='Full range tested'
+)
+solid_patch_legend = patches.Rectangle(
+    (0, 0), 1, 1,
+    linewidth=0,
+    edgecolor='none',
+    facecolor='dimgray',
+    label='P ≥ 0.7'
+)
+
+ax.legend(
+    handles=[hatch_patch_legend, solid_patch_legend] + size_legend_handles,
+    loc='upper left',
+    ncol=1        # single column
+)
+
+# Main plot formatting
+ax.set_xticks(np.arange(0, 121, 20))
+ax.set_yticks(np.arange(0, 241, 20))
+ax.set_xlim(0, 140)
+ax.set_ylim(0, 260)
+ax.set_xticklabels([])
+ax.set_xlabel("")
+ax.set_ylabel("True Visual Size (mm)")
+ax.set_title("Acceptance Bands by Physical Size")
+ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+# Subplot formatting
+ax2.set_xticks(np.arange(0, 121, 20))
+ax2.set_xlim(0, 140)
+ax2.set_xlabel("Physical Size (mm)")
+ax2.set_yticks(np.arange(50, 201, 25))
+ax2.set_ylim(50, 200)
+ax2.set_ylabel("Relative Visual Size (%)")
+ax2.set_title("")
+ax2.grid(axis='y', linestyle='--', alpha=0.7)
+
+plt.tight_layout()
+fig.subplots_adjust(hspace=0.08)
+
+save_path = f"{home_path}\\output\\rainbow_dual.png"
 plt.savefig(save_path, dpi=300, bbox_inches="tight")
 plt.close()
