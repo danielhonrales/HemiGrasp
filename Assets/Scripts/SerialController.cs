@@ -154,6 +154,41 @@ public class SerialController : MonoBehaviour
         }
     }
 
+    public void ChangeShape(int shape)
+    {
+        Debug.Log($"CHANGING TO: {shape}");
+        SendCmd("START", false);
+
+        switch (shape) {
+            case 0: // Small 1
+                SendCmd("A,0", false);
+                break;
+            case 1: // Medium 2
+                SendCmd("A,50", false);
+                break;
+            case 2: // Large 3
+                SendCmd("A,100", false);
+                break;
+            case 3: // Convex 4
+                SendCmd("T,0", false);
+                SendCmd("M,100", false);
+                SendCmd("L,0", false);
+                break;
+            case 4: // Concave 5
+                SendCmd("T,100", false);
+                SendCmd("M,0", false);
+                SendCmd("L,100", false);
+                break;
+            case 5: // Slope 6
+                SendCmd("T,100", false);
+                SendCmd("M,50", false);
+                SendCmd("L,0", false);
+                break;
+        }
+
+        StartCoroutine(Helper(false));
+    }
+
     public void StopPID(bool secondHand = false) {
         SendCmd("STOP", secondHand);
     }

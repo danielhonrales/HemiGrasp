@@ -106,7 +106,7 @@ public class Study2DataController : MonoBehaviour
 
         float physicalVal = float.Parse(csvData[currentTrial][dataIndex["physicalVelocity"]]);
         testController.physicalSpeed = Math.Abs(physicalVal);
-        testController.dynamicForward = Math.Sign(physicalVal) >= 0;
+        testController.dynamicPhysicalForward = Math.Sign(physicalVal) >= 0;
         testController.visualSpeed = float.Parse(csvData[currentTrial][dataIndex["visualMultiplier"]]) * testController.physicalSpeed;
 
         testController.DynamicAll();

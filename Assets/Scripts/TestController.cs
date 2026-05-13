@@ -31,7 +31,8 @@ public class TestController : MonoBehaviour
     [Range(20f, 120f)]
     public float physicalRadius;
     public bool isDynamic;
-    public bool dynamicForward;
+    public bool dynamicVisualForward;
+    public bool dynamicPhysicalForward;
     public float visualSpeed;
     public float physicalSpeed;
     public bool limitDynamicTime;
@@ -116,11 +117,11 @@ public class TestController : MonoBehaviour
             }
         }
 
-        grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
-        basketball.transform.position = sphere.transform.position + basketballOffset;
-        football.transform.position = sphere.transform.position + footballOffset;
-        piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
-        shell.transform.position = sphere.transform.position + shellOffset;
+        // grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+        // basketball.transform.position = sphere.transform.position + basketballOffset;
+        // football.transform.position = sphere.transform.position + footballOffset;
+        // piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+        // shell.transform.position = sphere.transform.position + shellOffset;
 
         visualRadius = Mathf.Round(visualRadius * 20f) / 20f;
         physicalRadiusChange = Mathf.Round(physicalRadiusChange * 20f) / 20f;
@@ -169,8 +170,207 @@ public class TestController : MonoBehaviour
             sphere.SetActive(true);
         }
 
-        if (tracking)
+        if (Input.GetKeyDown(KeyCode.Alpha1)) {
+            serialController.ChangeShape(0);
+
+            sphere.transform.position = homePos;
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+
+            float visualOffset = 0.0f;
+            if (activeObject == PhysicalObject.Grapefruit) {
+                visualOffset = 0.0f;
+                grapefruit.transform.position = new Vector3(grapefruit.transform.position.x, grapefruit.transform.position.y + visualOffset, grapefruit.transform.position.z);
+            } else if (activeObject == PhysicalObject.Sphere) {
+                visualOffset = -0.01f;
+                sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
+            } else if (activeObject == PhysicalObject.Basketball) {
+                visualOffset = -0.02f;
+                basketball.transform.position = new Vector3(basketball.transform.position.x, basketball.transform.position.y + visualOffset, basketball.transform.position.z);
+            } else if (activeObject == PhysicalObject.Football) {
+                visualOffset = -0.02f;
+                football.transform.position = new Vector3(football.transform.position.x, football.transform.position.y + visualOffset, football.transform.position.z);
+            } else if (activeObject == PhysicalObject.PiggyBank) {
+                visualOffset = 0.0f;
+                piggyBank.transform.position = new Vector3(piggyBank.transform.position.x, piggyBank.transform.position.y + visualOffset, piggyBank.transform.position.z);
+            } else if (activeObject == PhysicalObject.Shell) {
+                visualOffset = -0.01f;
+                shell.transform.position = new Vector3(shell.transform.position.x, shell.transform.position.y + visualOffset, shell.transform.position.z);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2)) {
+            serialController.ChangeShape(1);
+            
+    sphere.transform.position = homePos;
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+
+            float visualOffset = 0.0f;
+            if (activeObject == PhysicalObject.Grapefruit) {
+                visualOffset = 0.01f;
+                grapefruit.transform.position = new Vector3(grapefruit.transform.position.x, grapefruit.transform.position.y + visualOffset, grapefruit.transform.position.z);
+            } else if (activeObject == PhysicalObject.Sphere) {
+                visualOffset = 0.0f;
+                sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
+            } else if (activeObject == PhysicalObject.Basketball) {
+                visualOffset = -0.01f;
+                basketball.transform.position = new Vector3(basketball.transform.position.x, basketball.transform.position.y + visualOffset, basketball.transform.position.z);
+            } else if (activeObject == PhysicalObject.Football) {
+                visualOffset = -0.01f;
+                football.transform.position = new Vector3(football.transform.position.x, football.transform.position.y + visualOffset, football.transform.position.z);
+            } else if (activeObject == PhysicalObject.PiggyBank) {
+                visualOffset = 0.01f;
+                piggyBank.transform.position = new Vector3(piggyBank.transform.position.x, piggyBank.transform.position.y + visualOffset, piggyBank.transform.position.z);
+            } else if (activeObject == PhysicalObject.Shell) {
+                visualOffset = 0.0f;
+                shell.transform.position = new Vector3(shell.transform.position.x, shell.transform.position.y + visualOffset, shell.transform.position.z);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3)) {
+            serialController.ChangeShape(2);
+            
+            sphere.transform.position = homePos;
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+            
+            float visualOffset = 0.0f;
+            if (activeObject == PhysicalObject.Grapefruit) {
+                visualOffset = 0.02f;
+                grapefruit.transform.position = new Vector3(grapefruit.transform.position.x, grapefruit.transform.position.y + visualOffset, grapefruit.transform.position.z);
+            } else if (activeObject == PhysicalObject.Sphere) {
+                visualOffset = 0.01f;
+                sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
+            } else if (activeObject == PhysicalObject.Basketball) {
+                visualOffset = 0.0f;
+                basketball.transform.position = new Vector3(basketball.transform.position.x, basketball.transform.position.y + visualOffset, basketball.transform.position.z);
+            } else if (activeObject == PhysicalObject.Football) {
+                visualOffset = 0.0f;
+                football.transform.position = new Vector3(football.transform.position.x, football.transform.position.y + visualOffset, football.transform.position.z);
+            } else if (activeObject == PhysicalObject.PiggyBank) {
+                visualOffset = 0.02f;
+                piggyBank.transform.position = new Vector3(piggyBank.transform.position.x, piggyBank.transform.position.y + visualOffset, piggyBank.transform.position.z);
+            } else if (activeObject == PhysicalObject.Shell) {
+                visualOffset = 0.01f;
+                shell.transform.position = new Vector3(shell.transform.position.x, shell.transform.position.y + visualOffset, shell.transform.position.z);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha4)) {
+            serialController.ChangeShape(3);
+
+            sphere.transform.position = homePos;
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+            
+            float visualOffset = 0.0f;
+            if (activeObject == PhysicalObject.Grapefruit) {
+                visualOffset = 0.02f;
+                grapefruit.transform.position = new Vector3(grapefruit.transform.position.x, grapefruit.transform.position.y + visualOffset, grapefruit.transform.position.z);
+            } else if (activeObject == PhysicalObject.Sphere) {
+                visualOffset = 0.01f;
+                sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
+            } else if (activeObject == PhysicalObject.Basketball) {
+                visualOffset = 0.0f;
+                basketball.transform.position = new Vector3(basketball.transform.position.x, basketball.transform.position.y + visualOffset, basketball.transform.position.z);
+            } else if (activeObject == PhysicalObject.Football) {
+                visualOffset = 0.0f;
+                football.transform.position = new Vector3(football.transform.position.x, football.transform.position.y + visualOffset, football.transform.position.z);
+            } else if (activeObject == PhysicalObject.PiggyBank) {
+                visualOffset = 0.02f;
+                piggyBank.transform.position = new Vector3(piggyBank.transform.position.x, piggyBank.transform.position.y + visualOffset, piggyBank.transform.position.z);
+            } else if (activeObject == PhysicalObject.Shell) {
+                visualOffset = 0.01f;
+                shell.transform.position = new Vector3(shell.transform.position.x, shell.transform.position.y + visualOffset, shell.transform.position.z);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha5)) {
+            serialController.ChangeShape(4);
+            
+            sphere.transform.position = homePos;
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+            
+
+            float visualOffset = 0.0f;
+            if (activeObject == PhysicalObject.Grapefruit) {
+                visualOffset = 0.0f;
+                grapefruit.transform.position = new Vector3(grapefruit.transform.position.x, grapefruit.transform.position.y + visualOffset, grapefruit.transform.position.z);
+            } else if (activeObject == PhysicalObject.Sphere) {
+                visualOffset = -0.01f;
+                sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
+            } else if (activeObject == PhysicalObject.Basketball) {
+                visualOffset = -0.02f;
+                basketball.transform.position = new Vector3(basketball.transform.position.x, basketball.transform.position.y + visualOffset, basketball.transform.position.z);
+            } else if (activeObject == PhysicalObject.Football) {
+                visualOffset = -0.02f;
+                football.transform.position = new Vector3(football.transform.position.x, football.transform.position.y + visualOffset, football.transform.position.z);
+            } else if (activeObject == PhysicalObject.PiggyBank) {
+                visualOffset = 0.0f;
+                piggyBank.transform.position = new Vector3(piggyBank.transform.position.x, piggyBank.transform.position.y + visualOffset, piggyBank.transform.position.z);
+            } else if (activeObject == PhysicalObject.Shell) {
+                visualOffset = -0.01f;
+                shell.transform.position = new Vector3(shell.transform.position.x, shell.transform.position.y + visualOffset, shell.transform.position.z);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha6)) {
+            serialController.ChangeShape(5);
+            
+            sphere.transform.position = homePos;
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+            
+            float visualOffset = 0.0f;
+            if (activeObject == PhysicalObject.Grapefruit) {
+                visualOffset = 0.01f;
+                grapefruit.transform.position = new Vector3(grapefruit.transform.position.x, grapefruit.transform.position.y + visualOffset, grapefruit.transform.position.z);
+            } else if (activeObject == PhysicalObject.Sphere) {
+                visualOffset = 0.0f;
+                sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
+            } else if (activeObject == PhysicalObject.Basketball) {
+                visualOffset = -0.01f;
+                basketball.transform.position = new Vector3(basketball.transform.position.x, basketball.transform.position.y + visualOffset, basketball.transform.position.z);
+            } else if (activeObject == PhysicalObject.Football) {
+                visualOffset = -0.01f;
+                football.transform.position = new Vector3(football.transform.position.x, football.transform.position.y + visualOffset, football.transform.position.z);
+            } else if (activeObject == PhysicalObject.PiggyBank) {
+                visualOffset = 0.01f;
+                piggyBank.transform.position = new Vector3(piggyBank.transform.position.x, piggyBank.transform.position.y + visualOffset, piggyBank.transform.position.z);
+            } else if (activeObject == PhysicalObject.Shell) {
+                visualOffset = 0.0f;
+                shell.transform.position = new Vector3(shell.transform.position.x, shell.transform.position.y + visualOffset, shell.transform.position.z);
+            }
+        }
+
+        if (tracking) {
             sphere.transform.position = new Vector3(hand.position.x + calibOffsetOneHand.x, hand.position.y + calibOffsetOneHand.y, hand.position.z + calibOffsetOneHand.z);
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+        }
     }
 
     private void OnApplicationQuit() {
@@ -241,11 +441,15 @@ public class TestController : MonoBehaviour
     }
 
     public void DynamicAll() {
-        if (dynamicForward) {
+        if (dynamicVisualForward) {
             StartCoroutine(DynamicVisual(1));
-            StartCoroutine(DynamicPhysical(1));
         } else {
             StartCoroutine(DynamicVisual(0));
+        }
+
+        if (dynamicPhysicalForward) {
+            StartCoroutine(DynamicPhysical(1));
+        } else {
             StartCoroutine(DynamicPhysical(0));
         }
     }
@@ -288,8 +492,8 @@ public class TestController : MonoBehaviour
     public IEnumerator DynamicVisual(int direction)
     {
         float elapsed = 0f;
-        //float duration = 2.0f / visualSpeed;
-        float duration = 2.0f / physicalSpeed;
+        float duration = 2.0f / visualSpeed;
+        // float duration = 2.0f / physicalSpeed;
 
         if (limitDynamicTime)
         {
@@ -302,15 +506,19 @@ public class TestController : MonoBehaviour
         float forwardEndMapped = (forwardEnd * 0.02f) + 0.1258f;
         float backwardEndMapped = (backwardEnd * 0.02f) + 0.1258f;
 
-        float startScale = (direction == 1) ? changeMapping[0] : changeMapping[2];
+        // float startScale = (direction == 1) ? changeMapping[0] : changeMapping[2];
         //float endScale = (direction == 1) ? changeMapping[2] : changeMapping[0];
 
-        float endScale;
-        if (direction == 1) {
-            endScale = forwardEndMapped;
-        } else {
-            endScale = backwardEndMapped;
-        }
+        float startScale = sphere.transform.localScale.x;
+
+        // float endScale;
+        // if (direction == 1) {
+        //     endScale = forwardEndMapped;
+        // } else {
+        //     endScale = backwardEndMapped;
+        // }
+
+        float endScale = visualRadius;
 
         sphere.transform.localScale = new Vector3(startScale, startScale, startScale);
 
@@ -323,7 +531,8 @@ public class TestController : MonoBehaviour
         while (elapsed <= duration)
         {
             //float t = elapsed / duration;
-            float t = elapsed / (2.0f / physicalSpeed);
+            float t = elapsed / (2.0f / visualSpeed);
+            // float t = elapsed / (2.0f / physicalSpeed);
 
             sphere.transform.localScale = Vector3.Lerp(new Vector3(startScale, startScale, startScale), new Vector3(endScale, endScale, endScale), t);
 
