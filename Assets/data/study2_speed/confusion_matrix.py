@@ -81,7 +81,7 @@ def plot_cm(cm: pd.DataFrame, title: str, output_path: str):
         square=True,
         ax=ax,
         vmin=0,
-        vmax=1.0,
+        vmax=3.0,
         cbar_kws={"label": "Mean Congruency", "shrink": 0.8},
     )
     ax.set_title(title, fontsize=13, pad=10)
