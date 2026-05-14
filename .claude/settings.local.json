@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python confusion_matrix.py -p 1-12)",
+      "Bash(pip install *)",
+      "Bash(python -m pip install matplotlib seaborn pandas numpy -q)",
+      "Bash(where python *)",
+      "Bash(C:/Users/Daniel/AppData/Local/Python/bin/python.exe -c \"import matplotlib; import seaborn; import pandas; import numpy; print\\('all ok'\\)\")",
+      "Bash(C:/Users/Daniel/AppData/Local/Python/bin/python.exe -m pip install seaborn -q)",
+      "Bash(C:/Users/Daniel/AppData/Local/Python/bin/python.exe confusion_matrix.py -p 1-12)",
+      "Bash(C:/Users/Daniel/AppData/Local/Python/bin/python.exe confusion_matrix.py -p 1,2,3,4 --per-participant --normalize)",
+      "Bash(C:/Users/Daniel/AppData/Local/Python/bin/python.exe confusion_matrix.py)",
+      "Bash(C:/Users/Daniel/AppData/Local/Python/bin/python.exe -c ' *)",
+      "Bash(Get-ChildItem -Recurse \"c:\\\\Users\\\\Daniel\\\\Downloads\\\\HemiGrasp\\\\Assets\\\\data\\\\study2_shape\\\\results\")",
+      "Bash(Select-Object FullName)"
+    ]
+  }
+}
