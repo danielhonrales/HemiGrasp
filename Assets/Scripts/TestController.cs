@@ -537,7 +537,8 @@ public class TestController : MonoBehaviour
             sphere.transform.localScale = Vector3.Lerp(new Vector3(startScale, startScale, startScale), new Vector3(endScale, endScale, endScale), t);
 
             sphere.transform.position = homePos;
-            float visualOffset = (physicalRadiusChange - ((Mathf.Lerp(startScale, endScale, t) - 0.1258f) / 0.02f)) * 0.01f;
+            // float visualOffset = (physicalRadiusChange - ((Mathf.Lerp(startScale, endScale, t) - 0.1258f) / 0.02f)) * 0.01f;
+            float visualOffset = (physicalRadiusChange - sphere.transform.localScale.y) * 0.001f;
             Debug.Log($"DEBUG! homePos: {homePos} | physicalRadiusChange: {physicalRadiusChange} | visualRadius: {((Mathf.Lerp(startScale, endScale, t) - 0.1258f) / 0.02f)} | visualOffset: {visualOffset}");
             sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
 
