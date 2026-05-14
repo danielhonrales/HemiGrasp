@@ -1,0 +1,7 @@
+visual,small,medium,large,convex,concave,slope
+small,3.0,1.4,0.4,0.0,0.4,1.2
+medium,2.8,2.0,1.4,0.4,0.6,2.2
+large,1.6,2.2,3.0,0.0,0.8,2.0
+convex,1.2,1.2,0.2,0.8,0.0,0.6
+concave,0.4,0.8,0.4,0.4,0.0,0.4
+slope,0.4,0.8,1.8,1.2,0.2,1.6
