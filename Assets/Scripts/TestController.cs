@@ -45,6 +45,7 @@ public class TestController : MonoBehaviour
     public Vector3 homePos;
     public bool tracking;
     public float dynamicStepDuration;
+    public bool changeOffset;
 
     [Header("References"), Space(10)]
     public GameObject sphere;
@@ -117,11 +118,13 @@ public class TestController : MonoBehaviour
             }
         }
 
-        // grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
-        // basketball.transform.position = sphere.transform.position + basketballOffset;
-        // football.transform.position = sphere.transform.position + footballOffset;
-        // piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
-        // shell.transform.position = sphere.transform.position + shellOffset;
+        if (changeOffset) {
+            grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
+            basketball.transform.position = sphere.transform.position + basketballOffset;
+            football.transform.position = sphere.transform.position + footballOffset;
+            piggyBank.transform.position = sphere.transform.position + piggyBankOffset;
+            shell.transform.position = sphere.transform.position + shellOffset;
+        }
 
         visualRadius = Mathf.Round(visualRadius * 20f) / 20f;
         physicalRadiusChange = Mathf.Round(physicalRadiusChange * 20f) / 20f;
@@ -518,7 +521,7 @@ public class TestController : MonoBehaviour
         //     endScale = backwardEndMapped;
         // }
 
-        float endScale = visualRadius;
+        float endScale = (visualRadius * 0.001f) + 0.1258f;
 
         sphere.transform.localScale = new Vector3(startScale, startScale, startScale);
 
@@ -545,7 +548,7 @@ public class TestController : MonoBehaviour
             yield return null;
         }
 
-        sphere.transform.localScale = new Vector3(endScale, endScale, endScale);
+        // sphere.transform.localScale = new Vector3(endScale, endScale, endScale);
     }
 
     public void AlertEnd()
