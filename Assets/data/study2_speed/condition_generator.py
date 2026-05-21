@@ -6,14 +6,15 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-physical = ["grow_slow", "grow_moderate", "grow_fast", "shrink_slow", "shrink_moderate", "shrink_fast"]
-visual   = ["grow_slow", "grow_moderate", "grow_fast", "shrink_slow", "shrink_moderate", "shrink_fast"]
+physical  = ["10", "20", "30", "40"]
+visual    = ["50", "75", "100", "150", "200"]
+direction = ["grow", "shrink"]
 
 num_participants = 12
 repetitions = 5  # per condition
 
 # Output base folder
-output_base = 'Assets\\data\\study2_speed\\p_sheets'
+output_base = 'p_sheets'
 os.makedirs(output_base, exist_ok=True)
 
 # -------------------------------
@@ -30,6 +31,13 @@ def generate_participant_trials(pid):
     # Repeat each condition
     repeated_conditions = conditions * repetitions
 
+    # Block 1
+    if (pid % 2 == 0):
+        direct = direction[1]
+    else:
+        direct = direction[0]
+
+
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)
 
@@ -39,7 +47,30 @@ def generate_participant_trials(pid):
             'trial': trial_num,
             'physical': phys,
             'visual': vis,
-            'congruency': None
+            'direction': direct,
+            'congruency': None,
+            'binary': None
+        }
+        trials.append(trial)
+    
+    # Block 2
+    if (pid % 2 == 0):
+        direct = direction[0]
+    else:
+        direct = direction[1]
+
+    # Counterbalance by shuffling order per participant
+    random.shuffle(repeated_conditions)
+
+    for trial_num, (phys, vis) in enumerate(repeated_conditions):
+        trial = {
+            'pid': pid,
+            'trial': trial_num + 100,
+            'physical': phys,
+            'visual': vis,
+            'direction': direct,
+            'congruency': None,
+            'binary': None
         }
         trials.append(trial)
 

@@ -208,7 +208,7 @@ public class TestController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha2)) {
             serialController.ChangeShape(1);
             
-    sphere.transform.position = homePos;
+            sphere.transform.position = homePos;
             grapefruit.transform.position = sphere.transform.position + grapefruitOffset;
             basketball.transform.position = sphere.transform.position + basketballOffset;
             football.transform.position = sphere.transform.position + footballOffset;
@@ -521,7 +521,7 @@ public class TestController : MonoBehaviour
         //     endScale = backwardEndMapped;
         // }
 
-        float endScale = (visualRadius * 0.001f) + 0.1258f;
+        float endScale = visualRadius * 0.002f;
 
         sphere.transform.localScale = new Vector3(startScale, startScale, startScale);
 
@@ -541,7 +541,8 @@ public class TestController : MonoBehaviour
 
             sphere.transform.position = homePos;
             // float visualOffset = (physicalRadiusChange - ((Mathf.Lerp(startScale, endScale, t) - 0.1258f) / 0.02f)) * 0.01f;
-            float visualOffset = (physicalRadiusChange - sphere.transform.localScale.y) * 0.001f;
+            // float visualOffset = physicalRadiusChange - (sphere.transform.localScale.y - 0.1258f) * 0.002f;
+            float visualOffset = (physicalRadiusChange * 0.02f + 0.1258f) - sphere.transform.localScale.y;
             Debug.Log($"DEBUG! homePos: {homePos} | physicalRadiusChange: {physicalRadiusChange} | visualRadius: {((Mathf.Lerp(startScale, endScale, t) - 0.1258f) / 0.02f)} | visualOffset: {visualOffset}");
             sphere.transform.position = new Vector3(sphere.transform.position.x, sphere.transform.position.y + visualOffset, sphere.transform.position.z);
 

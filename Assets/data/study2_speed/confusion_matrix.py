@@ -13,7 +13,7 @@ import seaborn as sns
 # ── Parameters ────────────────────────────────────────────────────────────────
 # Which participants to include.
 # Use a range string "1-12", a list "1,2,3,4", or mixed "1-4,6,8-10".
-PARTICIPANTS = "1-12"
+PARTICIPANTS = "1" # "1-12"
 
 # Generate one matrix per participant in addition to the aggregate.
 PER_PARTICIPANT = False
