@@ -13,19 +13,18 @@ import seaborn as sns
 # ── Parameters ────────────────────────────────────────────────────────────────
 # Which participants to include.
 # Use a range string "1-12", a list "1,2,3,4", or mixed "1-4,6,8-10".
-PARTICIPANTS = "1" # "1-12"
+PARTICIPANTS = "1-2" # "1-12"
 
 # Generate one matrix per participant in addition to the aggregate.
-PER_PARTICIPANT = False
+PER_PARTICIPANT = True
 # ──────────────────────────────────────────────────────────────────────────────
 
-SPEEDS = [
-    "grow_slow", "grow_moderate", "grow_fast",
-    "shrink_slow", "shrink_moderate", "shrink_fast",
-]
+PHYSICAL_SPEEDS = ["10", "20", "30", "40"]
+VISUAL_SPEEDS = ["50", "75", "100", "150", "200"]
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 P_SHEETS_DIR = os.path.join(BASE_DIR, "p_sheets")
-RESULTS_DIR = os.path.join(BASE_DIR, "results")
+RESULTS_DIR = os.path.join(BASE_DIR, "output")
 
 
 def parse_participants(spec: str) -> list:
@@ -65,7 +64,7 @@ def build_matrix(df: pd.DataFrame) -> pd.DataFrame:
         values="congruency",
         aggfunc="mean",
     )
-    cm = cm.reindex(index=SPEEDS, columns=SPEEDS)
+    # cm = cm.reindex(index=VISUAL_SPEEDS, columns=PHYSICAL_SPEEDS)
     return cm
 
 
@@ -81,7 +80,7 @@ def plot_cm(cm: pd.DataFrame, title: str, output_path: str):
         square=True,
         ax=ax,
         vmin=0,
-        vmax=3.0,
+        vmax=6.0,
         cbar_kws={"label": "Mean Congruency", "shrink": 0.8},
     )
     ax.set_title(title, fontsize=13, pad=10)
@@ -95,22 +94,33 @@ def plot_cm(cm: pd.DataFrame, title: str, output_path: str):
     print(f"  Saved figure: {output_path}")
 
 
-def run_aggregate(df: pd.DataFrame, participants: list, spec_clean: str):
+def run_aggregate(df: pd.DataFrame, participants: list, spec_clean: str, grow: bool):
     output_dir = os.path.join(RESULTS_DIR, f"p{spec_clean}")
     os.makedirs(output_dir, exist_ok=True)
+
+    if grow:
+        df = df[df["direction"] == "grow"]
+    else:
+        df = df[df["direction"] == "shrink"]
 
     cm = build_matrix(df)
 
     n = len(participants)
     p_label = f"p{participants[0]}-p{participants[-1]}" if n > 1 else f"p{participants[0]}"
-    title = f"Mean Congruency — {p_label}  (n={n} participant{'s' if n > 1 else ''})"
 
-    plot_cm(cm, title, os.path.join(output_dir, "confusion_matrix.png"))
-    cm.to_csv(os.path.join(output_dir, "confusion_matrix.csv"))
-    print(f"  Saved CSV:    {os.path.join(output_dir, 'confusion_matrix.csv')}")
+    if grow:
+        title = f"Mean Congruency (Grow) — {p_label}  (n={n} participant{'s' if n > 1 else ''})"
+        plot_cm(cm, title, os.path.join(output_dir, "confusion_matrix_grow.png"))
+        cm.to_csv(os.path.join(output_dir, "confusion_matrix_grow.csv"))
+        print(f"  Saved CSV:    {os.path.join(output_dir, 'confusion_matrix_grow.csv')}")
+    else:
+        title = f"Mean Congruency (Shrink) — {p_label}  (n={n} participant{'s' if n > 1 else ''})"
+        plot_cm(cm, title, os.path.join(output_dir, "confusion_matrix_shrink.png"))
+        cm.to_csv(os.path.join(output_dir, "confusion_matrix_shrink.csv"))
+        print(f"  Saved CSV:    {os.path.join(output_dir, 'confusion_matrix_shrink.csv')}")
 
 
-def run_per_participant(df: pd.DataFrame, participants: list, spec_clean: str):
+def run_per_participant(df: pd.DataFrame, participants: list, spec_clean: str, grow: bool):
     output_dir = os.path.join(RESULTS_DIR, f"p{spec_clean}")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -119,11 +129,22 @@ def run_per_participant(df: pd.DataFrame, participants: list, spec_clean: str):
         if sub.empty:
             print(f"  No data for p{pid}, skipping.")
             continue
-        cm = build_matrix(sub)
-        title = f"Mean Congruency — p{pid}"
-        plot_cm(cm, title, os.path.join(output_dir, f"p{pid}_confusion_matrix.png"))
 
-    run_aggregate(df, participants, spec_clean)
+        if grow:
+            sub = sub[sub["direction"] == "grow"]
+        else:
+            sub = sub[sub["direction"] == "shrink"]
+
+        cm = build_matrix(sub)
+
+        if grow:
+            title = f"Mean Congruency (Grow) — p{pid}"
+            plot_cm(cm, title, os.path.join(output_dir, f"p{pid}_confusion_matrix_grow.png"))
+        else:
+            title = f"Mean Congruency (Shrink) — p{pid}"
+            plot_cm(cm, title, os.path.join(output_dir, f"p{pid}_confusion_matrix_shrink.png"))
+
+    run_aggregate(df, participants, spec_clean, grow)
 
 
 def main():
@@ -137,9 +158,11 @@ def main():
     print(f"Output directory: results/p{spec_clean}/\n")
 
     if PER_PARTICIPANT:
-        run_per_participant(df, participants, spec_clean)
+        run_per_participant(df, participants, spec_clean, True)
+        run_per_participant(df, participants, spec_clean, False)
     else:
-        run_aggregate(df, participants, spec_clean)
+        run_aggregate(df, participants, spec_clean, True)
+        run_aggregate(df, participants, spec_clean, False)
 
     print("\nDone.")
 
