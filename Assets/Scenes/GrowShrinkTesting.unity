@@ -1131,7 +1131,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   firstHandPort: COM18
-  secondHandPort: COM14
+  secondHandPort: COM9
   baudRate: 115200
   errorWarning: 50
   activeMotor: A
@@ -1147,6 +1147,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8bd169fdc94b524b84d06b67b807643, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speedControl: 0
   currentVisualRadius: 62
   currentPhysicalRadius: 62
   targetVisualRadius: 0
@@ -1158,7 +1159,9 @@ MonoBehaviour:
   homePosition: {x: 0, y: 0, z: 0}
   sphere: {fileID: 2116133114}
   serialController: {fileID: 1168516024}
-  offsetMultiplier: 1
+  visualSizeDifferenceMult: 1.25
+  offsetMultiplier: 0.65
+  offsetConstant: 0
 --- !u!114 &1168516026
 MonoBehaviour:
   m_ObjectHideFlags: 0

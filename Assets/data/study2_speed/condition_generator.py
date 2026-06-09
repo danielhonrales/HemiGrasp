@@ -7,8 +7,11 @@ import os
 # Define the conditions
 # -------------------------------
 physical  = ["10", "20", "30", "40"]
-visual    = ["50", "75", "100", "150", "200"]
+visual    = ["25", "50", "75", "100", "200", "300", "400"]
+# visual    = ["50", "75", "100", "150", "200"]
 direction = ["grow", "shrink"]
+
+num_trials_in_block = len(physical) * len(visual) * len(direction)
 
 num_participants = 12
 repetitions = 5  # per condition
@@ -65,7 +68,7 @@ def generate_participant_trials(pid):
     for trial_num, (phys, vis) in enumerate(repeated_conditions):
         trial = {
             'pid': pid,
-            'trial': trial_num + 100,
+            'trial': trial_num + num_trials_in_block,
             'physical': phys,
             'visual': vis,
             'direction': direct,

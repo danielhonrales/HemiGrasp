@@ -23,7 +23,10 @@ public class DynamicController : MonoBehaviour {
 
     [Space(20)]
 
-    [Header("Current State (mm)")]
+    [Header("Use speed control?")]
+    public bool speedControl;
+
+    [Space(10), Header("Current State (mm)")]
     public float currentVisualRadius;
     public float currentPhysicalRadius;
 
@@ -47,7 +50,10 @@ public class DynamicController : MonoBehaviour {
     private float originalOffsetY;
     private Transform hand;
 
+    [Space(10), Header("Misc.")]
+    public float visualSizeDifferenceMult;
     public float offsetMultiplier;
+    public float offsetConstant;
 
     void Start() {
         // Find hand (middle finger) object
@@ -91,13 +97,17 @@ public class DynamicController : MonoBehaviour {
     // Instantly set physical and visual radius
     private void ManualReset(float radius) {
         SetPhysicalRadius(radius);
-        SetVisualRadius(radius);
+        SetVisualRadius(radius * visualSizeDifferenceMult);
     }
 
     // Change size of physical
-    private void SetPhysicalRadius(float radius) {
+    private void SetPhysicalRadius(float radius, bool skipGoTo = false) {
         currentPhysicalRadius = radius;
-        serialController.GoTo(MMtoDevice(radius), false);
+
+        if (!skipGoTo) {
+            serialController.SetSpeedMode(false);
+            serialController.GoTo(MMtoDevice(radius), false);
+        }
     }
 
     // Change size of sphere
@@ -108,8 +118,8 @@ public class DynamicController : MonoBehaviour {
                                                   MMtoUnityUnits(radius));
 
         // Offset visual position to match top of physical and visual
-        float offset = MMtoUnityUnits(currentPhysicalRadius - currentVisualRadius) * offsetMultiplier;
-        Debug.Log($"PHYSICAL: {currentPhysicalRadius:01d}  VISUAL: {currentVisualRadius:01d}  DIFFERENCE: {(currentPhysicalRadius - currentVisualRadius):01d}  OFFSET: {offset:01d}");
+        float offset = MMtoUnityUnits((currentPhysicalRadius - currentVisualRadius) + offsetConstant) * offsetMultiplier;
+        // Debug.Log($"PHYSICAL: {currentPhysicalRadius}  VISUAL: {currentVisualRadius}  DIFFERENCE: {currentPhysicalRadius - currentVisualRadius}  OFFSET: {offset}");
         sphere.transform.position = homePosition;
         sphere.transform.position = new Vector3(sphere.transform.position.x,
                                                 sphere.transform.position.y + offset,
@@ -132,11 +142,38 @@ public class DynamicController : MonoBehaviour {
 
         float initialVisualRadius = currentVisualRadius;
         targetVisualRadius = currentVisualRadius + (visualSpeed * duration);
+            
+        int targetPosition = (int)Mathf.Lerp(0, 100, Mathf.InverseLerp(62, 82, targetPhysicalRadius));
+
+        // Call speed control command
+        if (speedControl) {    
+            int targetSpeed = 0;
+            if (Mathf.Abs(physicalSpeed) == 10f) {
+                targetSpeed = 20;
+            } else if (Mathf.Abs(physicalSpeed) == 20f) {
+                targetSpeed = 28;
+            } else if (Mathf.Abs(physicalSpeed) == 30f) {
+                targetSpeed = 40;
+            } else if (Mathf.Abs(physicalSpeed) == 40f) {
+                targetSpeed = 70;
+            }
+
+            serialController.SetSpeedMode(true);
+            serialController.SpeedCommand(targetPosition, targetSpeed);
+        } else {
+            if (targetPosition < 50) {
+                targetPosition = 0;
+            } else {
+                targetPosition = 100;
+            }
+
+            serialController.DynamicCommand(targetPosition, (int)Mathf.Abs(physicalSpeed));
+        }
 
         while (timeElapsed < duration) {
             float t = timeElapsed / duration;
             
-            SetPhysicalRadius(Mathf.Lerp(initialPhysicalRadius, targetPhysicalRadius, t));
+            SetPhysicalRadius(Mathf.Lerp(initialPhysicalRadius, targetPhysicalRadius, t), true);
             SetVisualRadius(Mathf.Lerp(initialVisualRadius, targetVisualRadius, t));
 
             timeElapsed += Time.deltaTime;

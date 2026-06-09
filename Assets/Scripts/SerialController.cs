@@ -74,7 +74,7 @@ public class SerialController : MonoBehaviour
     }
 
     bool GetPosAndError(
-        int location,
+        int location, bool secondHand,
         out float m, out float t, out float l,
         out float mErr, out float tErr, out float lErr)
     {
@@ -82,7 +82,9 @@ public class SerialController : MonoBehaviour
 
         try
         {
-            string line = firstHandSerial.ReadLine();
+            string line = secondHand 
+                ? secondHandSerial.ReadLine() 
+                : firstHandSerial.ReadLine();
             string[] values = line.Split(',');
 
             if (values.Length < 3) return false;
@@ -133,11 +135,9 @@ public class SerialController : MonoBehaviour
         //SendCmd("POS");
 
         if (!intermediate)
-            {
-            StartCoroutine(Helper(secondHand));
-        }
+            StartCoroutine(Helper(secondHand, location, 50f));
 
-        if (GetPosAndError(location, out float m, out float t, out float l,
+        if (GetPosAndError(location, secondHand, out float m, out float t, out float l,
                                          out float mErr, out float tErr, out float lErr))
         {
             string warning =
@@ -193,9 +193,43 @@ public class SerialController : MonoBehaviour
         SendCmd("STOP", secondHand);
     }
 
-    public IEnumerator Helper(bool secondHand = false) {
-        yield return new WaitForSeconds(1);
+    public IEnumerator Helper(bool secondHand = false, int targetLocation = 0, float tolerance = 50f) {
+        // float timeout = 10f;
+        // float elapsed = 0f;
+
+        // while (elapsed < timeout) {
+        //     yield return new WaitForSeconds(0.1f);
+        //     elapsed += 0.1f;
+
+        //     if (GetPosAndError(targetLocation, secondHand, out _, out _, out _,
+        //                     out float mErr, out float tErr, out float lErr)) {
+        //         if (mErr < tolerance && tErr < tolerance && lErr < tolerance) {
+        //             Debug.Log("Target reached");
+        //             break;
+        //         }
+        //     }
+        // }
+
+        yield return new WaitForSeconds(1f);
+
         SendCmd("STOP", secondHand);
+    }
+
+    public void SpeedCommand(int position, int speed, bool secondHand = false) {
+        SendCmd($"S,{position},{speed}", secondHand);
+    }
+
+    public void SetSpeedMode(bool speedMode, bool secondHand = false) {
+        if (speedMode) {
+            SendCmd("SPEED", secondHand);
+        } else {
+            SendCmd("PID", secondHand);
+        }
+    }
+
+    public void DynamicCommand(int position, int speed, bool secondHand = false) {
+        SendCmd("START", secondHand);
+        SendCmd($"D,{position},{speed}", secondHand);
     }
 
     // ---------------- INPUT HELPERS ----------------
