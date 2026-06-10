@@ -566,6 +566,20 @@ def draw_bars_bottom(axis, df, bar_width=4):
 draw_bars_top(ax, heatmap_df, bar_width=6)
 draw_bars_bottom(ax2, heatmap_df2, bar_width=6)
 
+print("\nMean relative visual size (%) where P(congruent) > 0.70:")
+all_above = []
+for p in heatmap_df2.columns:
+    col = heatmap_df2[p].dropna()
+    mask = col.values > 0.70
+    if mask.any():
+        vals = col.index.values[mask]
+        all_above.extend(vals)
+        print(f"  Physical {p:5.1f} mm -> {vals.mean():.1f}%")
+    else:
+        print(f"  Physical {p:5.1f} mm -> no values above threshold")
+if all_above:
+    print(f"  Overall mean          -> {np.mean(all_above[1:]):.1f}%")
+
 ax2.axhline(y=100, color='0.3', linewidth=1.2, linestyle='-', zorder=3)
 
 hatch_patch_legend = patches.Rectangle(

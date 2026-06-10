@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 # Load data
-pids = [3]
+pids = [1,2,3]
 
 all_trials = []
 all_data = []
@@ -216,7 +216,7 @@ ax.grid(axis='y', linestyle='--', alpha=0.7)
 ax2.set_xticks(np.arange(0, 41, 10))
 ax2.set_xlim(0, 50)
 ax2.set_xlabel("Physical Speed (mm/s)")
-ax2.set_yticks(np.arange(25, 401, 50))
+ax2.set_yticks([25, 50, 75, 100, 200, 300, 400])
 ax2.set_ylim(25, 400)
 ax2.set_ylabel("Relative Visual Speed (%)")
 ax2.set_title("")
@@ -380,7 +380,7 @@ ax.grid(axis='y', linestyle='--', alpha=0.7)
 ax2.set_xticks(np.arange(0, 41, 10))
 ax2.set_xlim(0, 50)
 ax2.set_xlabel("Physical Speed (mm/s)")
-ax2.set_yticks(np.arange(25, 401, 50))
+ax2.set_yticks([25, 50, 75, 100, 200, 300, 400])
 ax2.set_ylim(25, 400)
 ax2.set_ylabel("Relative Visual Speed (%)")
 ax2.set_title("")
