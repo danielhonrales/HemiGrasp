@@ -186,6 +186,7 @@ public class SphereSurfaceClamper : MonoBehaviour
             foreach (var chain in s_FingerChains)
                 ProjectFingerChain(chain, _clampedSphere);
         }
+
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -203,6 +204,7 @@ public class SphereSurfaceClamper : MonoBehaviour
             foreach (var s in _spheres)
             {
                 if (s == null) continue;
+                _snapRadius = s.transform.localScale.x;
                 float dist = Vector3.Distance(trackedWristPos, s.WorldCenter);
                 if (dist < _snapRadius && dist < nearestDist)
                 {
