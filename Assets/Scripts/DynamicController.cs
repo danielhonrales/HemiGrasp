@@ -23,7 +23,7 @@ public class DynamicController : MonoBehaviour {
 
     [Space(20)]
 
-    [Header("One-hand: FALSE, Two-hand: TRUE")]
+    [Header("One-rightHand: FALSE, Two-rightHand: TRUE")]
     public bool twoHand;
 
     [Space(10), Header("Current State (mm)")]
@@ -41,6 +41,7 @@ public class DynamicController : MonoBehaviour {
     [Space(10), Header("Calibration")]
     public bool tracking;
     public Vector3 calibrationOffset;
+    public Vector3 calibrationTwoHandOffset;
     public Vector3 homePosition;
 
     [Space(10), Header("References")]
@@ -48,7 +49,8 @@ public class DynamicController : MonoBehaviour {
     public SerialController serialController;
 
     private float originalOffsetY;
-    private Transform hand;
+    private Transform rightHand;
+    private Transform leftHand;
 
     [Space(10), Header("Misc.")]
     public float visualSizeDifferenceMult;
@@ -56,13 +58,18 @@ public class DynamicController : MonoBehaviour {
     public float offsetConstant;
 
     void Start() {
-        // Find hand (middle finger) object
-        hand = GameObject.Find("[BuildingBlock] Hand Tracking right").transform
+        // Find rightHand (middle finger) object
+        rightHand = GameObject.Find("[BuildingBlock] Hand Tracking right").transform
                          .Find("Bones")
                          .Find("XRHand_Wrist")
                          .Find("XRHand_MiddleMetacarpal")
                          .Find("XRHand_MiddleProximal");
 
+        leftHand = GameObject.Find("[BuildingBlock] Hand Tracking left").transform
+                         .Find("Bones")
+                         .Find("XRHand_Wrist")
+                         .Find("XRHand_MiddleMetacarpal")
+                         .Find("XRHand_MiddleProximal");
         // Set initial offset value
         originalOffsetY = calibrationOffset.y;
     }
@@ -75,10 +82,15 @@ public class DynamicController : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.F)) { ManualReset(82f); }
 
         // Update sphere position if tracking is enabled
-        if (tracking) {
-            sphere.transform.position = new Vector3(hand.position.x + calibrationOffset.x,
-                                                    hand.position.y + calibrationOffset.y,
-                                                    hand.position.z + calibrationOffset.z);
+        if (!twoHand && tracking) {
+            sphere.transform.position = new Vector3(rightHand.position.x + calibrationOffset.x,
+                                                    rightHand.position.y + calibrationOffset.y,
+                                                    rightHand.position.z + calibrationOffset.z);
+        }
+        if (twoHand && tracking) {
+            sphere.transform.position = new Vector3(((rightHand.position.x + leftHand.position.x) /2) + calibrationTwoHandOffset.x,
+                                                    ((rightHand.position.y + leftHand.position.y) /2) + calibrationTwoHandOffset.y,
+                                                    ((rightHand.position.z + leftHand.position.z) /2) + calibrationTwoHandOffset.z);
         }
     }
 
@@ -124,7 +136,10 @@ public class DynamicController : MonoBehaviour {
                                                   MMtoUnityUnits(radius));
 
         // Offset visual position to match top of physical and visual
-        float offset = MMtoUnityUnits((currentPhysicalRadius - currentVisualRadius) + offsetConstant) * offsetMultiplier;
+        float offset = 0;
+        if (!twoHand) {
+            offset = MMtoUnityUnits((currentPhysicalRadius - currentVisualRadius) + offsetConstant) * offsetMultiplier;
+        }
         // Debug.Log($"PHYSICAL: {currentPhysicalRadius}  VISUAL: {currentVisualRadius}  DIFFERENCE: {currentPhysicalRadius - currentVisualRadius}  OFFSET: {offset}");
         sphere.transform.position = homePosition;
         sphere.transform.position = new Vector3(sphere.transform.position.x,
@@ -172,6 +187,7 @@ public class DynamicController : MonoBehaviour {
             timeElapsed += Time.deltaTime;
             yield return null;
         }
+        sphere.SetActive(true);
     }
     
     // Convert from millimeters to Unity units

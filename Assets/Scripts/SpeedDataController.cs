@@ -34,7 +34,6 @@ public class SpeedDataController : MonoBehaviour
         {"visual", 3},
         {"direction", 4},
         {"congruency", 5},
-        {"binary", 6},
     };
 
     void Start()
@@ -47,16 +46,8 @@ public class SpeedDataController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.L)) { LoadData(); }
         if (Input.GetKeyDown(KeyCode.LeftArrow)) { LoadTrial(); }
         if (Input.GetKeyDown(KeyCode.RightArrow)) { NextTrial(); }
-        if (Input.GetKeyDown(KeyCode.UpArrow)) { RecordBinary(1); }
-        if (Input.GetKeyDown(KeyCode.DownArrow)) { RecordBinary(0); }
-
-        if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0)) { RecordResponse(0); }
-        if (Input.GetKeyDown(KeyCode.Keypad1) || Input.GetKeyDown(KeyCode.Alpha1)) { RecordResponse(1); }
-        if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Alpha2)) { RecordResponse(2); }
-        if (Input.GetKeyDown(KeyCode.Keypad3) || Input.GetKeyDown(KeyCode.Alpha3)) { RecordResponse(3); }
-        if (Input.GetKeyDown(KeyCode.Keypad4) || Input.GetKeyDown(KeyCode.Alpha4)) { RecordResponse(4); }
-        if (Input.GetKeyDown(KeyCode.Keypad5) || Input.GetKeyDown(KeyCode.Alpha5)) { RecordResponse(5); }
-        if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6)) { RecordResponse(6); }
+        if (Input.GetKeyDown(KeyCode.UpArrow)) { RecordResponse(1); }
+        if (Input.GetKeyDown(KeyCode.DownArrow)) { RecordResponse(0); }
     }
 
     public void LoadData()
@@ -106,10 +97,20 @@ public class SpeedDataController : MonoBehaviour
         // }
 
         if (isGrowBlock) {
-            dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+            if (csvData[currentTrial][dataIndex["physical"]] == "0") {
+                dynamicController.physicalSpeed = 40f;
+            } else {
+                dynamicController.sphere.SetActive(true);
+                dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+            }
             dynamicController.visualSpeed = (float.Parse(csvData[currentTrial][dataIndex["visual"]]) - 60f) / (20f / dynamicController.physicalSpeed);
         } else {
-            dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+            if (csvData[currentTrial][dataIndex["physical"]] == "0") {
+                dynamicController.physicalSpeed = -40f;
+            } else {
+                dynamicController.sphere.SetActive(true);
+                dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+            }
             dynamicController.visualSpeed = (80f - float.Parse(csvData[currentTrial][dataIndex["visual"]])) / (20f / dynamicController.physicalSpeed);
         }
     }
@@ -134,14 +135,7 @@ public class SpeedDataController : MonoBehaviour
         csvData[currentTrial][dataIndex["congruency"]] = response.ToString();
 
         SaveData();
-    }
-
-    public void RecordBinary(int response)
-    {
-        Debug.Log($"[DATA] Recording binary {response} for trial {currentTrial}");
-        csvData[currentTrial][dataIndex["binary"]] = response.ToString();
-
-        SaveData();
+        dynamicController.sphere.SetActive(false);
     }
     
     public void SaveData()

@@ -1156,6 +1156,7 @@ MonoBehaviour:
   physicalSpeed: 0
   tracking: 0
   calibrationOffset: {x: 0, y: -0.08, z: 0}
+  calibrationTwoHandOffset: {x: 0, y: -0.02, z: 0.01}
   homePosition: {x: 0, y: 0, z: 0}
   sphere: {fileID: 2116133114}
   serialController: {fileID: 1168516024}
@@ -1458,9 +1459,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _skeleton: {fileID: 1328226545}
   _spheres: []
-  _snapRadius: 0.12
-  _releaseHysteresis: 0.02
-  _palmSurfaceOffset: 0.04
+  _snapRadius: 0.02
+  _releaseHysteresis: 0.05
+  _palmSurfaceOffset: 0.01
   _fingerSurfaceOffset: 0.001
   _debugDraw: 0
 --- !u!1 &1563416099
@@ -2016,9 +2017,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _skeleton: {fileID: 1854326218}
   _spheres: []
-  _snapRadius: 0.125
-  _releaseHysteresis: 0.02
-  _palmSurfaceOffset: 0.04
+  _snapRadius: 0.02
+  _releaseHysteresis: 0.05
+  _palmSurfaceOffset: 0.01
   _fingerSurfaceOffset: 0.001
   _debugDraw: 0
 --- !u!1 &1854925046
@@ -2679,7 +2680,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0.095, y: 0.75, z: 0.331}
-  m_LocalScale: {x: 0.1258, y: 0.1258, z: 0.1258}
+  m_LocalScale: {x: 0.15, y: 0.15, z: 0.15}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
