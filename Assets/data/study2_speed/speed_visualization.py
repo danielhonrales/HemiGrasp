@@ -104,7 +104,7 @@ plt.rcParams["hatch.linewidth"] = 2.0
 fig, (ax, ax2) = plt.subplots(
     2, 1,
     figsize=(10, 9),
-    gridspec_kw={"height_ratios": [2, 1]}
+    gridspec_kw={"height_ratios": [1.5, 1]}
 )
 
 def draw_bars_top(axis, df, bar_width=4):
@@ -206,7 +206,7 @@ ax.legend(handles=[hatch_patch_legend, solid_patch_legend], loc='upper left')
 ax.set_xticks(np.arange(0, 41, 10))
 ax.set_yticks(np.arange(0, 161, 20))
 ax.set_xlim(0, 50)
-ax.set_ylim(0, 160)
+ax.set_ylim(0, 165)
 ax.set_xticklabels([])
 ax.set_xlabel("")
 ax.set_ylabel("True Visual Speed (mm/s)")
@@ -216,8 +216,8 @@ ax.grid(axis='y', linestyle='--', alpha=0.7)
 ax2.set_xticks(np.arange(0, 41, 10))
 ax2.set_xlim(0, 50)
 ax2.set_xlabel("Physical Speed (mm/s)")
-ax2.set_yticks([25, 50, 75, 100, 200, 300, 400])
-ax2.set_ylim(25, 400)
+ax2.set_yticks([0, 25, 50, 75, 100, 200, 300, 400])
+ax2.set_ylim(0, 425)
 ax2.set_ylabel("Relative Visual Speed (%)")
 ax2.set_title("")
 ax2.grid(axis='y', linestyle='--', alpha=0.7)
@@ -268,7 +268,7 @@ plt.rcParams["hatch.linewidth"] = 2.0
 fig, (ax, ax2) = plt.subplots(
     2, 1,
     figsize=(10, 9),
-    gridspec_kw={"height_ratios": [2, 1]}
+    gridspec_kw={"height_ratios": [1.5, 1]}
 )
 
 def draw_bars_top(axis, df, bar_width=4):
@@ -370,7 +370,7 @@ ax.legend(handles=[hatch_patch_legend, solid_patch_legend], loc='upper left')
 ax.set_xticks(np.arange(0, 41, 10))
 ax.set_yticks(np.arange(0, 161, 20))
 ax.set_xlim(0, 50)
-ax.set_ylim(0, 160)
+ax.set_ylim(0, 165)
 ax.set_xticklabels([])
 ax.set_xlabel("")
 ax.set_ylabel("True Visual Speed (mm/s)")
@@ -380,8 +380,8 @@ ax.grid(axis='y', linestyle='--', alpha=0.7)
 ax2.set_xticks(np.arange(0, 41, 10))
 ax2.set_xlim(0, 50)
 ax2.set_xlabel("Physical Speed (mm/s)")
-ax2.set_yticks([25, 50, 75, 100, 200, 300, 400])
-ax2.set_ylim(25, 400)
+ax2.set_yticks([0, 25, 50, 75, 100, 200, 300, 400])
+ax2.set_ylim(0, 425)
 ax2.set_ylabel("Relative Visual Speed (%)")
 ax2.set_title("")
 ax2.grid(axis='y', linestyle='--', alpha=0.7)
