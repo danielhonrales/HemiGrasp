@@ -1266,6 +1266,7 @@ GameObject:
   - component: {fileID: 1328226543}
   - component: {fileID: 1328226542}
   - component: {fileID: 1328226541}
+  - component: {fileID: 1328226548}
   m_Layer: 0
   m_Name: '[BuildingBlock] Hand Tracking left'
   m_TagString: Untagged
@@ -1443,6 +1444,25 @@ MonoBehaviour:
   installationRoutineCheckpoint:
     _installationRoutineId: 
     _installationVariants: []
+--- !u!114 &1328226548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1328226539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce2ffbcfc5ece0f4e8930bfdd48e4681, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _skeleton: {fileID: 1328226545}
+  _spheres: []
+  _snapRadius: 0.12
+  _releaseHysteresis: 0.02
+  _palmSurfaceOffset: 0.04
+  _fingerSurfaceOffset: 0.001
+  _debugDraw: 0
 --- !u!1 &1563416099
 GameObject:
   m_ObjectHideFlags: 0
@@ -1999,8 +2019,8 @@ MonoBehaviour:
   _snapRadius: 0.125
   _releaseHysteresis: 0.02
   _palmSurfaceOffset: 0.04
-  _fingerSurfaceOffset: 0.01
-  _debugDraw: 1
+  _fingerSurfaceOffset: 0.001
+  _debugDraw: 0
 --- !u!1 &1854925046
 GameObject:
   m_ObjectHideFlags: 0
