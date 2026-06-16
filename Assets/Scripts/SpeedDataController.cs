@@ -12,6 +12,8 @@ public class SpeedDataController : MonoBehaviour
     public int currentTrial = 1;
     public int totalTrials;
 
+    public bool isGrowBlock;
+
 
     [Header("FileStuff"), Space(10)]
     public string baseFolder = "Assets/data/study2_speed/p_sheets";
@@ -103,10 +105,10 @@ public class SpeedDataController : MonoBehaviour
         //     dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
         // }
 
-        if (trialData[dataIndex["direction"]] == "grow") {
+        if (isGrowBlock) {
             dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
             dynamicController.visualSpeed = (float.Parse(csvData[currentTrial][dataIndex["visual"]]) - 60f) / (20f / dynamicController.physicalSpeed);
-        } else if (trialData[dataIndex["direction"]] == "shrink") {
+        } else {
             dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
             dynamicController.visualSpeed = (80f - float.Parse(csvData[currentTrial][dataIndex["visual"]])) / (20f / dynamicController.physicalSpeed);
         }
@@ -120,7 +122,7 @@ public class SpeedDataController : MonoBehaviour
         {
             EndSet();
         } 
-        else
+        else 
         {
             LoadTrial();
         }
