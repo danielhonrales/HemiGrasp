@@ -95,12 +95,20 @@ public class SpeedDataController : MonoBehaviour
         string[] trialData = csvData[currentTrial];
         Debug.Log($"[DATA] Trial {trialData[dataIndex["trial"]]}: physical={trialData[dataIndex["physical"]]}, visual={trialData[dataIndex["visual"]]}, congruency={trialData[dataIndex["congruency"]]}");
 
+        // if (trialData[dataIndex["direction"]] == "grow") {
+        //     dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+        //     dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
+        // } else if (trialData[dataIndex["direction"]] == "shrink") {
+        //     dynamicController.physicalSpeed = -1 * float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+        //     dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
+        // }
+
         if (trialData[dataIndex["direction"]] == "grow") {
             dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
-            dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
+            dynamicController.visualSpeed = (float.Parse(csvData[currentTrial][dataIndex["visual"]]) - 60f) / (20f / dynamicController.physicalSpeed);
         } else if (trialData[dataIndex["direction"]] == "shrink") {
-            dynamicController.physicalSpeed = -1 * float.Parse(csvData[currentTrial][dataIndex["physical"]]);
-            dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
+            dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+            dynamicController.visualSpeed = (80f - float.Parse(csvData[currentTrial][dataIndex["visual"]])) / (20f / dynamicController.physicalSpeed);
         }
     }
 

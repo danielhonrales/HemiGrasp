@@ -11,10 +11,10 @@ visual    = ["25", "50", "75", "100", "200", "300", "400"]
 # visual    = ["50", "75", "100", "150", "200"]
 direction = ["grow", "shrink"]
 
-num_trials_in_block = len(physical) * len(visual) * len(direction)
-
 num_participants = 12
 repetitions = 5  # per condition
+
+num_trials_in_block = len(physical) * len(visual) * repetitions
 
 # Output base folder
 output_base = 'p_sheets'

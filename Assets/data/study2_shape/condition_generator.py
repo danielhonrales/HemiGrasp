@@ -6,20 +6,20 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-physical = ["small", "medium", "large", "convex", "concave", "slope"]
-visual   = ["small", "medium", "large", "convex", "concave", "slope"]
+shapes = ["small", "medium", "large", "convex", "concave", "slope"]
+rendering = ["static", "slow", "fast"]
 
 num_participants = 12
 repetitions = 5  # per condition
 
 # Output base folder
-output_base = 'Assets\\data\\study2_shape\\p_sheets'
+output_base = 'study2_shape\\p_sheets'
 os.makedirs(output_base, exist_ok=True)
 
 # -------------------------------
 # Generate all physical × visual conditions
 # -------------------------------
-conditions = list(itertools.product(physical, visual))
+conditions = list(itertools.product(shapes, rendering))
 
 # -------------------------------
 # Generate trials for one participant
@@ -33,12 +33,12 @@ def generate_participant_trials(pid):
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)
 
-    for trial_num, (phys, vis) in enumerate(repeated_conditions):
+    for trial_num, (sha, ren) in enumerate(repeated_conditions):
         trial = {
             'pid': pid,
             'trial': trial_num,
-            'physical': phys,
-            'visual': vis,
+            'shape': sha,
+            'rendering': ren,
             'congruency': None
         }
         trials.append(trial)

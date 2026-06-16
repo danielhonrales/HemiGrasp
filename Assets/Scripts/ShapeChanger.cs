@@ -62,6 +62,11 @@ public class ShapeChanger : MonoBehaviour
     public Vector3 concaveOffset;
     public Vector3 slopeOffset;
 
+    // TEMP added to fix errors
+    public Vector3 footballOffset;
+    public Vector3 piggyBankOffset;
+    public Vector3 shellOffset;
+
     private float originalOffsety;
     private Transform hand;
 

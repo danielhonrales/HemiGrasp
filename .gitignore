@@ -101,4 +101,4 @@ InitTestScene*.unity*
 *.zip
 
 /[Aa]ssets/Materials/Cantaloupe
-/[Aa]ssets/data/study2_speed/venv*
+/[Aa]ssets/data/study2_*/venv*

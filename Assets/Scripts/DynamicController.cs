@@ -23,8 +23,8 @@ public class DynamicController : MonoBehaviour {
 
     [Space(20)]
 
-    [Header("Use speed control?")]
-    public bool speedControl;
+    [Header("One-hand: FALSE, Two-hand: TRUE")]
+    public bool twoHand;
 
     [Space(10), Header("Current State (mm)")]
     public float currentVisualRadius;
@@ -86,7 +86,8 @@ public class DynamicController : MonoBehaviour {
         serialController.GoTo(0, false);
         serialController.GoTo(0, true);
         Thread.Sleep(1000);
-        serialController.StopPID();
+        serialController.StopPID(false);
+        serialController.StopPID(true);
     }
 
     // Save the current sphere location as its home position
@@ -107,6 +108,11 @@ public class DynamicController : MonoBehaviour {
         if (!skipGoTo) {
             serialController.SetSpeedMode(false);
             serialController.GoTo(MMtoDevice(radius), false);
+
+            if (twoHand) {
+                serialController.SetSpeedMode(false, true);
+                serialController.GoTo(MMtoDevice(radius), true);
+            }
         }
     }
 
@@ -145,29 +151,16 @@ public class DynamicController : MonoBehaviour {
             
         int targetPosition = (int)Mathf.Lerp(0, 100, Mathf.InverseLerp(62, 82, targetPhysicalRadius));
 
-        // Call speed control command
-        if (speedControl) {    
-            int targetSpeed = 0;
-            if (Mathf.Abs(physicalSpeed) == 10f) {
-                targetSpeed = 20;
-            } else if (Mathf.Abs(physicalSpeed) == 20f) {
-                targetSpeed = 28;
-            } else if (Mathf.Abs(physicalSpeed) == 30f) {
-                targetSpeed = 40;
-            } else if (Mathf.Abs(physicalSpeed) == 40f) {
-                targetSpeed = 70;
-            }
-
-            serialController.SetSpeedMode(true);
-            serialController.SpeedCommand(targetPosition, targetSpeed);
+        if (targetPosition < 50) {
+            targetPosition = 0;
         } else {
-            if (targetPosition < 50) {
-                targetPosition = 0;
-            } else {
-                targetPosition = 100;
-            }
+            targetPosition = 100;
+        }
 
-            serialController.DynamicCommand(targetPosition, (int)Mathf.Abs(physicalSpeed));
+        serialController.DynamicCommand(targetPosition, (int)Mathf.Abs(physicalSpeed), false);
+
+        if (twoHand) {
+            serialController.DynamicCommand(targetPosition, (int)Mathf.Abs(physicalSpeed), true);
         }
 
         while (timeElapsed < duration) {

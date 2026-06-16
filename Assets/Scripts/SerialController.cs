@@ -109,6 +109,34 @@ public class SerialController : MonoBehaviour
 
     // ---------------- MAIN LOGIC ----------------
 
+    public void EnablePID() {
+        Debug.Log("ENABLING PID");
+        SendCmd("START", false);
+    }
+
+    public void DisablePID() {
+        Debug.Log("DISABLING PID");
+        SendCmd("STOP", false);
+    }
+
+    public void DynamicT(int location, int speed)
+    {
+        Debug.Log($"[Dynamic T] Going to {location} with speed {speed}");
+        SendCmd($"DT,{location},{speed}", false);
+    }
+
+    public void DynamicM(int location, int speed)
+    {
+        Debug.Log($"[Dynamic M] Going to {location} with speed {speed}");
+        SendCmd($"DM,{location},{speed}", false);
+    }
+
+    public void DynamicL(int location, int speed)
+    {
+        Debug.Log($"[Dynamic L] Going to {location} with speed {speed}");
+        SendCmd($"DL,{location},{speed}", false);
+    }
+
     public void GoTo(int location, bool secondHand, bool calibration = true, bool intermediate = false)
     {
         Debug.Log($"GOING TO: {location}");
@@ -154,39 +182,39 @@ public class SerialController : MonoBehaviour
         }
     }
 
-    public void ChangeShape(int shape)
+    public void ChangeShape(int shape, bool secondHand = false)
     {
         Debug.Log($"CHANGING TO: {shape}");
-        SendCmd("START", false);
+        SendCmd("START", secondHand);
 
         switch (shape) {
             case 0: // Small 1
-                SendCmd("A,0", false);
+                SendCmd("A,0", secondHand);
                 break;
             case 1: // Medium 2
-                SendCmd("A,50", false);
+                SendCmd("A,50", secondHand);
                 break;
             case 2: // Large 3
-                SendCmd("A,100", false);
+                SendCmd("A,100", secondHand);
                 break;
             case 3: // Convex 4
-                SendCmd("T,0", false);
-                SendCmd("M,100", false);
-                SendCmd("L,0", false);
+                SendCmd("T,0", secondHand);
+                SendCmd("M,100", secondHand);
+                SendCmd("L,0", secondHand);
                 break;
             case 4: // Concave 5
-                SendCmd("T,100", false);
-                SendCmd("M,0", false);
-                SendCmd("L,100", false);
+                SendCmd("T,100", secondHand);
+                SendCmd("M,0", secondHand);
+                SendCmd("L,100", secondHand);
                 break;
             case 5: // Slope 6
-                SendCmd("T,100", false);
-                SendCmd("M,50", false);
-                SendCmd("L,0", false);
+                SendCmd("T,100", secondHand);
+                SendCmd("M,50", secondHand);
+                SendCmd("L,0", secondHand);
                 break;
         }
 
-        StartCoroutine(Helper(false));
+        StartCoroutine(Helper(secondHand));
     }
 
     public void StopPID(bool secondHand = false) {
