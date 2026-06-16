@@ -2,42 +2,31 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Clamps the entire hand to a sphere's surface once the wrist enters a
-/// proximity threshold, keeping the hand hugging the surface until it pulls
+/// Clamps the entire hand to a sphere's surface once a reference joint enters
+/// a proximity threshold, keeping the hand hugging the surface until it pulls
 /// far enough away to release.
 ///
+/// ── Reference joint ──────────────────────────────────────────────────────────
+///   Snapping and surface anchoring are driven by XRHand_MiddleIntermediate
+///   (the middle finger PIP / middle interphalangeal joint). This sits at the
+///   natural contact centre when the palm cups a sphere, so the sphere aligns
+///   under the knuckle crease rather than the wrist.
+///
 /// ── Behaviour ────────────────────────────────────────────────────────────────
-///
-///  FREE state  (wrist farther than snapRadius from sphere center)
-///    Hand moves freely with tracking. No modification to bone transforms.
-///
-///  CLAMPED state  (wrist within snapRadius)
-///    The wrist is anchored to the sphere surface. The entire hand moves as a
-///    rigid unit: the tracked-to-surface delta is computed and applied to the
-///    wrist transform, which Unity propagates to all children automatically.
-///    After the wrist is repositioned, per-finger surface projection runs to
-///    flatten any fingers that still end up inside the sphere.
-///
-///    The hand stays clamped until the wrist tracking position exceeds
-///    (snapRadius + releaseHysteresis), preventing rapid snap-in/snap-out.
-///
-///    When the sphere grows/shrinks the wrist anchor slides along the surface
-///    automatically each frame, so the whole hand follows.
+///   FREE    — hand moves freely with tracking; no bone transforms modified.
+///   CLAMPED — the reference joint is projected onto the sphere surface, and
+///             the same world-space delta is applied to the wrist, which Unity
+///             propagates to all children. Every joint in every finger chain
+///             (including metacarpals) is then individually projected to ensure
+///             nothing clips through.
 ///
 /// ── Processing order each LateUpdate ─────────────────────────────────────────
-///   1. Find the nearest sphere within snapRadius of the wrist.
-///   2. Compute wristSurfacePoint = sphere center + (wristTracked dir) * radius.
-///   3. Shift the wrist transform by (wristSurfacePoint - wristTracked).
-///      All children (palm, metacarpals, fingers) inherit this shift for free.
-///   4. Per-finger chain projection: walk proximal → distal, clamping any joint
-///      that still ends up inside the sphere after the rigid-body shift.
-///
-/// ── Setup ────────────────────────────────────────────────────────────────────
-///   1. Add SphereSurfaceClamper to the OVRHandPrefab root (one per hand).
-///   2. Assign _skeleton (OVRSkeleton on the same prefab).
-///   3. Add ClampableSphere to every grabbable sphere and assign to _spheres,
-///      or enable Auto Register on ClampableSphere for runtime-spawned objects.
-///   4. Tune snapRadius: should be roughly sphere radius + hand half-width.
+///   1. Read the tracked (pre-modification) position of the reference joint.
+///   2. Proximity check → enter/exit CLAMPED state with hysteresis.
+///   3. Compute surfaceDelta = SurfacePoint(refJoint) - refJoint.position.
+///   4. Translate the wrist by surfaceDelta (all children follow for free).
+///   5. Walk every finger chain proximal→distal; project each joint that is
+///      inside the sphere, propagating the lock to all more-distal joints.
 /// </summary>
 [DefaultExecutionOrder(10000)]
 public class SphereSurfaceClamper : MonoBehaviour
@@ -55,36 +44,40 @@ public class SphereSurfaceClamper : MonoBehaviour
     [SerializeField] private List<ClampableSphere> _spheres = new();
 
     [Header("Proximity Snapping")]
-    [Tooltip("Distance from sphere CENTER at which the hand snaps to the surface. " +
-             "Set this to roughly sphere-radius + ~0.06 m (half hand width) so the " +
-             "hand snaps as the palm first makes contact.")]
-    [SerializeField] private float _snapRadius = 0.12f;
+    [Tooltip("Distance from sphere CENTER at which the hand snaps to the surface, " +
+             "measured from the middle-finger PIP joint. Roughly sphere-radius + 0.03 m " +
+             "is a good starting point.")]
+    [SerializeField] private float _snapRadius = 0.1f;
 
-    [Tooltip("Extra distance beyond snapRadius the wrist must travel before releasing. " +
-             "Prevents jitter at the snap boundary.")]
+    [Tooltip("Extra distance beyond snapRadius the reference joint must travel before " +
+             "releasing. Prevents jitter at the snap boundary.")]
     [SerializeField, Range(0f, 0.05f)] private float _releaseHysteresis = 0.02f;
 
-    [Tooltip("Outward offset (metres) applied when anchoring the wrist to the surface. " +
-             "Needs to be larger to account for palm thickness between the wrist bone and the skin.")]
+    [Header("Surface Offsets")]
+    [Tooltip("Outward offset (metres) applied when anchoring the reference joint to the " +
+             "surface. Accounts for the distance between the PIP bone and the skin.")]
     [SerializeField, Range(0f, 0.2f)] private float _palmSurfaceOffset = 0.1f;
 
-    [Tooltip("Outward offset (metres) for individual finger joints. " +
-             "Fingers are thin so this can stay at or near 0.")]
+    [Tooltip("Outward offset (metres) for individual finger joints during per-joint " +
+             "projection. Fingers are thin so this can stay near 0.")]
     [SerializeField, Range(0f, 0.05f)] private float _fingerSurfaceOffset = 0f;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Bone ID tables  (XRHand / OpenXR naming)
     // ─────────────────────────────────────────────────────────────────────────
 
-    private static readonly OVRSkeleton.BoneId WristBone =
-        OVRSkeleton.BoneId.XRHand_Wrist;
+    // Reference joint used for proximity detection and surface anchoring.
+    // Middle PIP sits at the natural centre of the palm cup.
+    private const OVRSkeleton.BoneId RefJoint = OVRSkeleton.BoneId.XRHand_MiddleIntermediate;
 
-    // Finger chains, proximal → distal.
-    // The metacarpals are intentionally omitted here because the rigid wrist
-    // shift already moves them; we only need per-joint projection for phalanges.
+    // Wrist is the root of the entire hand hierarchy — translating it moves everything.
+    private const OVRSkeleton.BoneId WristBone = OVRSkeleton.BoneId.XRHand_Wrist;
+
+    // Full finger chains, proximal → distal, INCLUDING metacarpals.
+    // Every joint is listed so nothing is skipped and no joint can clip through.
     private static readonly OVRSkeleton.BoneId[][] s_FingerChains =
     {
-        new[] // Thumb  (no intermediate in XRHand)
+        new[] // Thumb  (no intermediate phalanx in XRHand)
         {
             OVRSkeleton.BoneId.XRHand_ThumbMetacarpal,
             OVRSkeleton.BoneId.XRHand_ThumbProximal,
@@ -130,18 +123,13 @@ public class SphereSurfaceClamper : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────────
 
     private Dictionary<OVRSkeleton.BoneId, Transform> _boneMap;
-
-    // The sphere the hand is currently snapped to (null = FREE).
-    private ClampableSphere _clampedSphere;
+    private ClampableSphere _clampedSphere; // null = FREE
 
     // ─────────────────────────────────────────────────────────────────────────
     // Public API
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// <summary>True while the hand is snapped to a sphere surface.</summary>
     public bool IsClamped => _clampedSphere != null;
-
-    /// <summary>The sphere currently being hugged, or null if free.</summary>
     public ClampableSphere ClampedSphere => _clampedSphere;
 
     public void Register(ClampableSphere sphere)
@@ -168,58 +156,64 @@ public class SphereSurfaceClamper : MonoBehaviour
         if (_boneMap == null) BuildBoneMap();
         if (_boneMap == null || _boneMap.Count == 0 || _spheres.Count == 0) return;
 
-        if (!_boneMap.TryGetValue(WristBone, out Transform wrist)) return;
+        if (!_boneMap.TryGetValue(RefJoint, out Transform refJointT)) return;
+        if (!_boneMap.TryGetValue(WristBone, out Transform wristT)) return;
 
-        // ── Step 1: Proximity check — update which sphere (if any) is active ──
-        UpdateClampState(wrist.position);
+        // Step 1: Read the raw tracked position BEFORE we modify anything.
+        Vector3 trackedRefPos = refJointT.position;
 
-        // ── Step 2: If clamped, shift wrist (and entire hand) to sphere surface ─
-        if (_clampedSphere != null)
-        {
-            Vector3 wristOnSurface = SurfacePoint(_clampedSphere, wrist.position, _palmSurfaceOffset);
-            Vector3 shift = wristOnSurface - wrist.position;
-            wrist.position = wristOnSurface;
+        // Step 2: Proximity check — enter or exit CLAMPED state.
+        UpdateClampState(trackedRefPos);
+        if (_clampedSphere == null) return;
 
-            // Step 3: Per-finger surface projection.
-            // The rigid shift already moved all children, but fingers that curl
-            // inward may still clip. Walk each chain and push any buried joint out.
-            foreach (var chain in s_FingerChains)
-                ProjectFingerChain(chain, _clampedSphere);
-        }
+        // Step 3: Compute how far the reference joint needs to move to sit on
+        //         the sphere surface, then apply that same delta to the wrist.
+        //         Because the wrist is the hierarchy root, every child bone
+        //         (palm, metacarpals, all fingers) translates by the same delta.
+        Vector3 refOnSurface = SurfacePoint(_clampedSphere, trackedRefPos, _palmSurfaceOffset);
+        Vector3 surfaceDelta = refOnSurface - trackedRefPos;
+        wristT.position += surfaceDelta;
 
+        // Step 4: Per-joint projection for every finger chain.
+        //         The rigid shift above handles most of the hand, but curled
+        //         fingers or knuckle joints can still land inside the sphere.
+        //         Walk every joint and project any that are inside.
+        foreach (var chain in s_FingerChains)
+            ProjectFingerChain(chain, _clampedSphere);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // State machine
     // ─────────────────────────────────────────────────────────────────────────
 
-    private void UpdateClampState(Vector3 trackedWristPos)
+    private void UpdateClampState(Vector3 trackedRefPos)
     {
         if (_clampedSphere == null)
         {
-            // FREE → look for any sphere whose snap zone contains the wrist.
+            // FREE → snap to the nearest sphere whose snap zone contains refJoint.
             ClampableSphere nearest = null;
             float nearestDist = float.MaxValue;
 
             foreach (var s in _spheres)
             {
                 if (s == null) continue;
-                _snapRadius = s.transform.localScale.x;
-                float dist = Vector3.Distance(trackedWristPos, s.WorldCenter);
-                if (dist < _snapRadius && dist < nearestDist)
+                float snapR = s.WorldRadius + _snapRadius; // snap zone = surface + margin
+                float dist = Vector3.Distance(trackedRefPos, s.WorldCenter);
+                if (dist < snapR && dist < nearestDist)
                 {
                     nearestDist = dist;
                     nearest = s;
                 }
             }
 
-            _clampedSphere = nearest; // null if none found
+            _clampedSphere = nearest;
         }
         else
         {
-            // CLAMPED → release only when wrist pulls beyond snapRadius + hysteresis.
-            float dist = Vector3.Distance(trackedWristPos, _clampedSphere.WorldCenter);
-            if (dist > _snapRadius + _releaseHysteresis)
+            // CLAMPED → release when refJoint pulls beyond surface + snapRadius + hysteresis.
+            float releaseR = _clampedSphere.WorldRadius + _snapRadius + _releaseHysteresis;
+            float dist = Vector3.Distance(trackedRefPos, _clampedSphere.WorldCenter);
+            if (dist > releaseR)
                 _clampedSphere = null;
         }
     }
@@ -228,11 +222,6 @@ public class SphereSurfaceClamper : MonoBehaviour
     // Finger-chain surface projection
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Walk one finger proximal → distal against a specific sphere.
-    /// Once a joint is inside the sphere, all more-distal joints are also
-    /// projected — they cannot physically reach past the surface.
-    /// </summary>
     private void ProjectFingerChain(OVRSkeleton.BoneId[] chain, ClampableSphere sphere)
     {
         bool locked = false;
@@ -241,8 +230,8 @@ public class SphereSurfaceClamper : MonoBehaviour
         {
             if (!_boneMap.TryGetValue(id, out Transform t)) continue;
 
-            float dist = Vector3.Distance(t.position, sphere.WorldCenter);
-            bool inside = dist < sphere.WorldRadius + _fingerSurfaceOffset;
+            bool inside = Vector3.Distance(t.position, sphere.WorldCenter)
+                          < sphere.WorldRadius + _fingerSurfaceOffset;
 
             if (inside || locked)
             {
@@ -256,10 +245,6 @@ public class SphereSurfaceClamper : MonoBehaviour
     // Geometry
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Returns the point on the sphere surface in the direction of worldPos,
-    /// offset outward by the given amount.
-    /// </summary>
     private static Vector3 SurfacePoint(ClampableSphere s, Vector3 worldPos, float offset)
     {
         Vector3 toPoint = worldPos - s.WorldCenter;
@@ -290,25 +275,37 @@ public class SphereSurfaceClamper : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (!_debugDraw || !Application.isPlaying) return;
+        if (!_debugDraw || !Application.isPlaying || _boneMap == null) return;
 
-        // Draw snap radius around each sphere.
         foreach (var s in _spheres)
         {
             if (s == null) continue;
-            Gizmos.color = (_clampedSphere == s)
-                ? new Color(0f, 1f, 0.3f, 0.15f)
-                : new Color(1f, 1f, 0f, 0.08f);
-            Gizmos.DrawSphere(s.WorldCenter, _snapRadius);
-            Gizmos.color = (_clampedSphere == s) ? Color.green : Color.yellow;
-            Gizmos.DrawWireSphere(s.WorldCenter, _snapRadius);
+            float snapR = s.WorldRadius + _snapRadius;
+            bool active = (_clampedSphere == s);
+
+            // Snap zone.
+            Gizmos.color = active ? new Color(0f, 1f, 0.3f, 0.12f) : new Color(1f, 1f, 0f, 0.06f);
+            Gizmos.DrawSphere(s.WorldCenter, snapR);
+            Gizmos.color = active ? Color.green : Color.yellow;
+            Gizmos.DrawWireSphere(s.WorldCenter, snapR);
+
+            // Sphere surface.
+            Gizmos.color = active ? new Color(0f, 1f, 0.3f, 0.25f) : new Color(1f, 1f, 1f, 0.1f);
+            Gizmos.DrawWireSphere(s.WorldCenter, s.WorldRadius);
         }
 
-        // Draw wrist position.
-        if (_boneMap != null && _boneMap.TryGetValue(WristBone, out Transform w))
+        // Reference joint (middle PIP).
+        if (_boneMap.TryGetValue(RefJoint, out Transform rj))
         {
             Gizmos.color = IsClamped ? Color.green : Color.red;
-            Gizmos.DrawSphere(w.position, 0.008f);
+            Gizmos.DrawSphere(rj.position, 0.007f);
+        }
+
+        // Wrist.
+        if (_boneMap.TryGetValue(WristBone, out Transform w))
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawSphere(w.position, 0.005f);
         }
     }
 #endif
