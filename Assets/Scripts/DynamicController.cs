@@ -23,7 +23,10 @@ public class DynamicController : MonoBehaviour {
 
     [Space(20)]
 
-    [Header("One-rightHand: FALSE, Two-rightHand: TRUE")]
+    [Header("Indicator: TRUE if this trial is static")]
+    public bool isStaticTrial;
+
+    [Space(10), Header("One-hand: FALSE, Two-hand: TRUE")]
     public bool twoHand;
 
     [Space(10), Header("Current State (mm)")]
@@ -47,6 +50,8 @@ public class DynamicController : MonoBehaviour {
     [Space(10), Header("References")]
     public GameObject sphere;
     public SerialController serialController;
+    
+    public GameObject responseIndicator;
 
     private float originalOffsetY;
     private Transform rightHand;
@@ -108,7 +113,7 @@ public class DynamicController : MonoBehaviour {
     }
 
     // Instantly set physical and visual radius
-    private void ManualReset(float radius) {
+    public void ManualReset(float radius) {
         SetPhysicalRadius(radius);
         SetVisualRadius(radius * visualSizeDifferenceMult);
     }
@@ -187,7 +192,15 @@ public class DynamicController : MonoBehaviour {
             timeElapsed += Time.deltaTime;
             yield return null;
         }
+
         sphere.SetActive(true);
+        responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
+
+        if (isStaticTrial) {
+            yield return new WaitForSeconds(3f);       
+        }
+
+        responseIndicator.GetComponent<Renderer>().material.color = Color.green;
     }
     
     // Convert from millimeters to Unity units

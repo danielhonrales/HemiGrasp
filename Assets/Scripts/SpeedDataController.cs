@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -99,17 +100,31 @@ public class SpeedDataController : MonoBehaviour
         if (isGrowBlock) {
             if (csvData[currentTrial][dataIndex["physical"]] == "0") {
                 dynamicController.physicalSpeed = 40f;
+                dynamicController.isStaticTrial = true;
             } else {
                 dynamicController.sphere.SetActive(true);
+                dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
                 dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+                dynamicController.isStaticTrial = false;
+
+                if (dynamicController.physicalSpeed < 12f) {
+                    dynamicController.physicalSpeed = 12f;
+                }
             }
             dynamicController.visualSpeed = (float.Parse(csvData[currentTrial][dataIndex["visual"]]) - 60f) / (20f / dynamicController.physicalSpeed);
         } else {
             if (csvData[currentTrial][dataIndex["physical"]] == "0") {
                 dynamicController.physicalSpeed = -40f;
+                dynamicController.isStaticTrial = true;
             } else {
                 dynamicController.sphere.SetActive(true);
+                dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
                 dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+                dynamicController.isStaticTrial = false;
+
+                if (dynamicController.physicalSpeed > -12f) {
+                    dynamicController.physicalSpeed = -12f;
+                }
             }
             dynamicController.visualSpeed = (80f - float.Parse(csvData[currentTrial][dataIndex["visual"]])) / (20f / dynamicController.physicalSpeed);
         }
@@ -136,6 +151,20 @@ public class SpeedDataController : MonoBehaviour
 
         SaveData();
         dynamicController.sphere.SetActive(false);
+        dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.red;
+
+        if (isGrowBlock) {
+            dynamicController.ManualReset(62f);
+        } else {
+            dynamicController.ManualReset(82f);
+        }
+        
+        StartCoroutine(WaitThenNextTrial(0.5f));
+    }
+
+    private IEnumerator WaitThenNextTrial(float delay) {
+        yield return new WaitForSeconds(delay);
+        NextTrial();
     }
     
     public void SaveData()
