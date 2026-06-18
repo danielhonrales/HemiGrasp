@@ -62,6 +62,8 @@ public class SphereSurfaceClamper : MonoBehaviour
              "projection. Fingers are thin so this can stay near 0.")]
     [SerializeField, Range(0f, 0.05f)] private float _fingerSurfaceOffset = 0f;
 
+    public GameObject restZone;
+
     // ─────────────────────────────────────────────────────────────────────────
     // Bone ID tables  (XRHand / OpenXR naming)
     // ─────────────────────────────────────────────────────────────────────────
@@ -153,6 +155,7 @@ public class SphereSurfaceClamper : MonoBehaviour
         if (_skeleton == null || !_skeleton.IsInitialized || !_skeleton.IsDataValid)
             return;
 
+
         if (_boneMap == null) BuildBoneMap();
         if (_boneMap == null || _boneMap.Count == 0 || _spheres.Count == 0) return;
 
@@ -161,6 +164,14 @@ public class SphereSurfaceClamper : MonoBehaviour
 
         // Step 1: Read the raw tracked position BEFORE we modify anything.
         Vector3 trackedRefPos = refJointT.position;
+
+        // Check if both hands are in the rest zones
+        if (restZone.GetComponent<BoxCollider>().bounds.Contains(trackedRefPos)) {
+            restZone.GetComponent<Renderer>().material.color = Color.green;
+            return;
+        } else {
+            restZone.GetComponent<Renderer>().material.color = Color.blue;
+        }
 
         // Step 2: Proximity check — enter or exit CLAMPED state.
         UpdateClampState(trackedRefPos);
