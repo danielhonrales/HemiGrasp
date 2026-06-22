@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-pids = [1,2]
+pids = [1,2,3]
 
 data_dir = os.path.join(os.path.dirname(__file__), "p_sheets")
 csv_files = glob.glob(os.path.join(data_dir, "**", "*_conditions.csv"), recursive=True)
@@ -52,18 +52,29 @@ plt.rcParams["hatch.linewidth"] = 2.0
 fig2, axes2 = plt.subplots(len(scenarios), 1, figsize=(10, 6 * len(scenarios)), sharey=True, sharex=True)
 bar_width = 6
 
+spacing = 10
+static_gap = 8
+speed_positions = []
+for i, s in enumerate(speeds):
+    pos = i * spacing
+    if i > 0 and speeds[0] == 0:
+        pos += static_gap
+    speed_positions.append(pos)
+speed_labels = ["Static" if s == 0 else str(s) for s in speeds]
+
 for row, scenario in enumerate(scenarios):
     ax2 = axes2[row]
     sdf = df[df["scenario"] == scenario]
     grouped_all = sdf.groupby(["physical_speed", "visual_end_size"])["congruency"].mean()
 
-    for speed in speeds:
+    for i, speed in enumerate(speeds):
+        pos = speed_positions[i]
         series = grouped_all[speed].sort_index()
         y = series.index.values
         y_min, y_max = y.min(), y.max()
 
         hatch_patch = patches.Rectangle(
-            (speed - bar_width / 2, y_min),
+            (pos - bar_width / 2, y_min),
             bar_width,
             y_max - y_min,
             linewidth=0.5,
@@ -79,7 +90,7 @@ for row, scenario in enumerate(scenarios):
             y_low = y[mask].min()
             y_high = y[mask].max()
             solid_patch = patches.Rectangle(
-                (speed - bar_width / 2, y_low),
+                (pos - bar_width / 2, y_low),
                 bar_width,
                 y_high - y_low,
                 linewidth=0,
@@ -102,17 +113,18 @@ for row, scenario in enumerate(scenarios):
         )
         ax2.legend(handles=[hatch_legend, solid_legend], loc='upper left')
 
-    ax2.set_xticks(speeds)
-    ax2.set_xlim(max(speeds) + 10, min(speeds) - 10)
+    ax2.set_xticks(speed_positions)
+    ax2.set_xticklabels(speed_labels)
+    ax2.set_xlim(speed_positions[0] - 5, speed_positions[-1] + 5)
     ax2.set_ylim(30, 65)
     ax2.set_yticks(np.arange(35, 65, 5))
-    ax2.set_ylabel(f"{scenario}\nVisual End Size (%)")
-    ax2.set_title(f"Congruency Bands — {scenario}")
+    ax2.set_ylabel(f"{scenario}\nVisual End Size (mm)")
+    ax2.set_title(f"{scenario}")
     ax2.grid(axis='y', linestyle='--', alpha=0.7)
     if row == len(scenarios) - 1:
         ax2.set_xlabel("Physical Speed (mm/s)")
 
-fig2.suptitle("Congruency Bands by Physical Speed — Shrink")
+fig2.suptitle("Congruency - Shrink")
 fig2.tight_layout()
 fig2.savefig(os.path.join(results_dir, "congruency_range.png"), dpi=300, bbox_inches="tight")
 plt.close()
