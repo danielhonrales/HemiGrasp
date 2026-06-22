@@ -123,7 +123,7 @@ pid,trial,physical_speed,visual_end_size,scenario,congruency
 1,121,10,180,one-hand,0
 1,122,40,80,one-hand,1
 1,123,20,140,one-hand,1
-1,124,0,140,one-hand,1
+1,124,0,140,one-hand,0
 1,125,40,120,one-hand,1
 1,126,20,180,one-hand,0
 1,127,0,140,one-hand,1

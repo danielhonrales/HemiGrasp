@@ -35,6 +35,8 @@ public class SphereSurfaceClamper : MonoBehaviour
     // Inspector
     // ─────────────────────────────────────────────────────────────────────────
 
+    public DynamicController dynamicController;
+
     [Header("Hand")]
     [Tooltip("OVRSkeleton on the hand prefab.")]
     [SerializeField] private OVRSkeleton _skeleton;
@@ -152,6 +154,9 @@ public class SphereSurfaceClamper : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (dynamicController.twoHand != true)
+            return;
+
         if (_skeleton == null || !_skeleton.IsInitialized || !_skeleton.IsDataValid)
             return;
 

@@ -13,7 +13,7 @@ csv_files = glob.glob(os.path.join(data_dir, "**", "*_conditions.csv"), recursiv
 df = pd.concat([pd.read_csv(f) for f in csv_files], ignore_index=True)
 df = df[df["pid"].isin(pids)]
 
-speeds = sorted(df["physical_speed"].unique())
+speeds = sorted(df["physical_speed"].unique(), reverse=True)
 scenarios = sorted(df["scenario"].unique())
 
 if min(pids) != max(pids):
@@ -42,7 +42,7 @@ for row, scenario in enumerate(scenarios):
             ax.set_ylabel(f"{scenario}\nP(Congruency)")
         ax.set_ylim(0, 1)
 
-fig.suptitle("P(Congruency) by Visual End Size per Physical Speed")
+fig.suptitle("P(Congruency) by Visual End Size per Physical Speed — Shrink")
 plt.tight_layout()
 fig.savefig(os.path.join(results_dir, "congruency.png"), dpi=300, bbox_inches="tight")
 plt.close()
@@ -103,16 +103,16 @@ for row, scenario in enumerate(scenarios):
         ax2.legend(handles=[hatch_legend, solid_legend], loc='upper left')
 
     ax2.set_xticks(speeds)
-    ax2.set_xlim(min(speeds) - 10, max(speeds) + 10)
-    ax2.set_ylim(60, 200)
-    ax2.set_yticks(np.arange(80, 200, 20))
+    ax2.set_xlim(max(speeds) + 10, min(speeds) - 10)
+    ax2.set_ylim(30, 65)
+    ax2.set_yticks(np.arange(35, 65, 5))
     ax2.set_ylabel(f"{scenario}\nVisual End Size (%)")
     ax2.set_title(f"Congruency Bands — {scenario}")
     ax2.grid(axis='y', linestyle='--', alpha=0.7)
     if row == len(scenarios) - 1:
         ax2.set_xlabel("Physical Speed (mm/s)")
 
-fig2.suptitle("Congruency Bands by Physical Speed")
+fig2.suptitle("Congruency Bands by Physical Speed — Shrink")
 fig2.tight_layout()
 fig2.savefig(os.path.join(results_dir, "congruency_range.png"), dpi=300, bbox_inches="tight")
 plt.close()
