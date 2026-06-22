@@ -194,8 +194,8 @@ public class SphereSurfaceClamper : MonoBehaviour
         //         The rigid shift above handles most of the hand, but curled
         //         fingers or knuckle joints can still land inside the sphere.
         //         Walk every joint and project any that are inside.
-        foreach (var chain in s_FingerChains)
-            ProjectFingerChain(chain, _clampedSphere);
+        // foreach (var chain in s_FingerChains) // uncomment this for finger clamping
+        //     ProjectFingerChain(chain, _clampedSphere);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

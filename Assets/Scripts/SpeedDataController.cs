@@ -146,6 +146,11 @@ public class SpeedDataController : MonoBehaviour
 
     public void RecordResponse(int response)
     {
+        if (dynamicController.sphere.active) {
+            Debug.Log($"[DATA] Wait for sphere to disappear before recording response!");
+            return;
+        }
+
         Debug.Log($"[DATA] Recording {response} for trial {currentTrial}");
         csvData[currentTrial][dataIndex["congruency"]] = response.ToString();
 

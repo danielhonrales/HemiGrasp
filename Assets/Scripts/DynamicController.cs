@@ -197,10 +197,21 @@ public class DynamicController : MonoBehaviour {
         responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
 
         if (isStaticTrial) {
-            yield return new WaitForSeconds(3f);       
+            yield return new WaitForSeconds(2f);       
         }
 
         responseIndicator.GetComponent<Renderer>().material.color = Color.green;
+
+        if (isStaticTrial) {
+            StartCoroutine(WaitThenDisappear(2f));
+        } else {
+            StartCoroutine(WaitThenDisappear(1f));
+        }
+    }
+
+    public IEnumerator WaitThenDisappear(float seconds) {
+        yield return new WaitForSeconds(seconds);
+        sphere.SetActive(false);
     }
     
     // Convert from millimeters to Unity units

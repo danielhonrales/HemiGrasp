@@ -303,7 +303,7 @@ Transform:
   m_GameObject: {fileID: 130727035}
   serializedVersion: 2
   m_LocalRotation: {x: 0.48696956, y: -0.49432638, z: -0.5114811, w: 0.5068423}
-  m_LocalPosition: {x: 0.00385, y: -0.00003, z: 0.01077}
+  m_LocalPosition: {x: 0.00388, y: -0.00003, z: 0.01153}
   m_LocalScale: {x: 0.00075, y: 0.0002, z: 0.00075}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1678,7 +1678,7 @@ MonoBehaviour:
   sphere: {fileID: 2116133114}
   serialController: {fileID: 1168516024}
   responseIndicator: {fileID: 130727035}
-  visualSizeDifferenceMult: 1.1
+  visualSizeDifferenceMult: 1
   offsetMultiplier: 0.65
   offsetConstant: 0
 --- !u!114 &1168516026
@@ -1693,7 +1693,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d45f164c0d66fb42a369f7dfda1d569, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pid: 1
+  pid: 12
   currentTrial: 1
   totalTrials: 0
   isGrowBlock: 1
@@ -1975,9 +1975,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce2ffbcfc5ece0f4e8930bfdd48e4681, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dynamicController: {fileID: 1168516025}
   _skeleton: {fileID: 1328226545}
   _spheres: []
-  _snapRadius: 0.02
+  _snapRadius: 0.06
   _releaseHysteresis: 0.05
   _palmSurfaceOffset: 0.01
   _fingerSurfaceOffset: 0.001
@@ -2120,7 +2121,7 @@ Transform:
   m_GameObject: {fileID: 1554294195}
   serializedVersion: 2
   m_LocalRotation: {x: 0.48696956, y: -0.49432638, z: -0.5114811, w: 0.5068423}
-  m_LocalPosition: {x: 0.00257, y: 0.00306, z: 0.01132}
+  m_LocalPosition: {x: 0.00263, y: 0.00306, z: 0.01312}
   m_LocalScale: {x: 0.002, y: 0.0008, z: 0.002}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2853,9 +2854,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce2ffbcfc5ece0f4e8930bfdd48e4681, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dynamicController: {fileID: 1168516025}
   _skeleton: {fileID: 1854326218}
   _spheres: []
-  _snapRadius: 0.02
+  _snapRadius: 0.06
   _releaseHysteresis: 0.05
   _palmSurfaceOffset: 0.01
   _fingerSurfaceOffset: 0.001
@@ -3674,7 +3676,7 @@ Transform:
   m_GameObject: {fileID: 2126806402}
   serializedVersion: 2
   m_LocalRotation: {x: 0.48696956, y: -0.49432638, z: -0.5114811, w: 0.5068423}
-  m_LocalPosition: {x: 0.00255, y: -0.00298, z: 0.01132}
+  m_LocalPosition: {x: 0.00261, y: -0.00298, z: 0.01312}
   m_LocalScale: {x: 0.002, y: 0.0008, z: 0.002}
   m_ConstrainProportionsScale: 0
   m_Children: []
