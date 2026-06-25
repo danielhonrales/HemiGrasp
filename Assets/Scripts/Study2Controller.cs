@@ -43,6 +43,12 @@ public class Study2Controller : MonoBehaviour {
     [SerializeField]
     private bool trialActive;
 
+    [SerializeField]
+    private float trialTime;
+
+    [SerializeField]
+    private float averageDist;
+
     [Header("Manual Control"), Space(10)]
 
     [SerializeField]
@@ -50,6 +56,9 @@ public class Study2Controller : MonoBehaviour {
 
     [SerializeField]
     private float targetPhysicalRadius;
+
+    [SerializeField]
+    private float resetPhysicalRadius;
 
     [SerializeField]
     private float delayTime;
@@ -122,6 +131,12 @@ public class Study2Controller : MonoBehaviour {
     private float originalOneHandOffsetY;
     private float originalTwoHandOffsetY;
 
+    private Coroutine timeCoroutine;
+    private Coroutine distCoroutine;
+
+    private float trialDistSum;
+    private int trialDistNumSamples;
+
     // In-memory CSV data storage
     private string[] header;
     private List<string[]> csvData = new List<string[]>();
@@ -133,7 +148,9 @@ public class Study2Controller : MonoBehaviour {
         { "scenario", 3 },
         { "delayTime", 4 },
         { "direction", 5 },
-        { "congruent", 6 }
+        { "congruent", 6 },
+        { "time", 7 },
+        { "distance", 8 }
     };
 
     void Start() {
@@ -231,6 +248,19 @@ public class Study2Controller : MonoBehaviour {
                     Vector3.Distance(leftHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance) {
                 tracking = true;
                 ScalePhysical(targetPhysicalRadius); 
+            }
+        }
+
+        // If sphere is grabbed in two-hand and hands get too far apart, reset sphere 
+        if (trialActive && tracking && twoHand) {
+            if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) > MMtoUnityUnits(visualRadius) * graspTolerance ||
+                    Vector3.Distance(leftHand.transform.position, sphere.transform.position) > MMtoUnityUnits(visualRadius) * graspTolerance) {
+                tracking = false;
+                ResetPhysical(resetPhysicalRadius); 
+
+                // Reset time and distance tracking
+                ResetTimeTracking();
+                ResetDistTracking();
             }
         }
 
@@ -391,6 +421,39 @@ public class Study2Controller : MonoBehaviour {
         sphere.SetActive(on);
     }
 
+    private IEnumerator TimeTracking() {
+        trialTime = 0f;
+
+        while (true) {
+            yield return null;
+            trialTime += Time.deltaTime;
+        }
+    }
+
+    private IEnumerator DistTracking() {
+        averageDist = 0f;
+        trialDistSum = 0f;
+        trialDistNumSamples = 0;
+
+        while (true) {
+            yield return null;
+            trialDistSum += Vector3.Distance(rightHand.transform.position, leftHand.transform.position);
+            trialDistNumSamples++;
+            averageDist = trialDistSum / trialDistNumSamples;
+        }
+    }
+
+    private void ResetTimeTracking() {
+        StopCoroutine(timeCoroutine);
+        trialTime = 0f;
+    }
+
+    private void ResetDistTracking() {
+        StopCoroutine(distCoroutine);
+        trialDistSum = 0f;
+        trialDistNumSamples = 0;
+    }
+
     // Load trial data from given CSV file
     private void LoadData() {
         string participantFolder = Path.Combine(baseFolder, $"p{pid}");
@@ -468,6 +531,10 @@ public class Study2Controller : MonoBehaviour {
     private IEnumerator WaitThenActive() {
         yield return new WaitForSeconds(1f);
         trialActive = true;
+
+        // Start time and distance tracking
+        timeCoroutine = StartCoroutine(TimeTracking());
+        distCoroutine = StartCoroutine(DistTracking());
     }
 
     // Move to next trial
@@ -480,12 +547,18 @@ public class Study2Controller : MonoBehaviour {
             Debug.Log("[HemiGrasp] ***** Set Finished! *****");
             StartCoroutine(AlertEnd());
         } else {
+            Debug.Log("[HemiGrasp] TEST 1");
             // Reset device(s)
             if (csvData[currentTrial][dataIndex["direction"]] == "expand") {
-                ResetPhysical(62f);
+                Debug.Log("[HemiGrasp] TEST 2");
+                resetPhysicalRadius = 62f;
             } else {
-                ResetPhysical(82f);
+                resetPhysicalRadius = 82f;
             }
+
+            Debug.Log("[HemiGrasp] TEST 3");
+            ResetPhysical(resetPhysicalRadius);
+            Debug.Log("[HemiGrasp] TEST 4");
 
             StartCoroutine(WaitThenLoadTrial());
         }
@@ -502,9 +575,22 @@ public class Study2Controller : MonoBehaviour {
         // Set trial as no longer active
         trialActive = false;
         tracking = false;
+        StopCoroutine(timeCoroutine);
+        StopCoroutine(distCoroutine);
 
+        // Record response
         Debug.Log($"[HemiGrasp] Recording {response} for trial {currentTrial}");
         csvData[currentTrial][dataIndex["congruent"]] = response.ToString();
+
+        // Record trial time
+        Debug.Log($"[HemiGrasp] Trial {currentTrial} took {trialTime}s");
+        csvData[currentTrial][dataIndex["time"]] = trialTime.ToString();
+
+        // Record average hand distance
+        if (twoHand) {
+            Debug.Log($"[HemiGrasp] Trial {currentTrial} had average hand distance of {averageDist}mm");
+            csvData[currentTrial][dataIndex["distance"]] = averageDist.ToString();
+        }
 
         // Save updated CSV
         SaveData();

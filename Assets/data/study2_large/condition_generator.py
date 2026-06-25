@@ -51,7 +51,9 @@ def generate_participant_trials(pid):
             'scenario': scen,
             'delayTime': delay,
             'direction': direction[0],
-            'congruency': None
+            'congruency': None,
+            'time': None,
+            'distance': None
         }
         trials.append(trial)
     
@@ -72,7 +74,9 @@ def generate_participant_trials(pid):
             'scenario': scen,
             'delayTime': delay,
             'direction': direction[0],
-            'congruency': None
+            'congruency': None,
+            'time': None,
+            'distance': None
         }
         trials.append(trial)
 
