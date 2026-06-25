@@ -6,7 +6,7 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-visual_size = ["80", "100", "120", "140", "160", "180"]
+visual_size = ["60", "55", "50", "45", "40", "35", "30", "25", "20"]
 scenario = ["one-hand", "two-hand"]
 delay_time = ["0.5"]
 direction = ["shrink"]
@@ -36,9 +36,9 @@ def generate_participant_trials(pid):
 
     # Block 1
     if (pid % 2 == 0):
-        scen = scenario[0]
-    else:
         scen = scenario[1]
+    else:
+        scen = scenario[0]
 
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)
@@ -59,9 +59,9 @@ def generate_participant_trials(pid):
     
     # Block 2
     if (pid % 2 == 0):
-        scen = scenario[1]
-    else:
         scen = scenario[0]
+    else:
+        scen = scenario[1]
 
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)

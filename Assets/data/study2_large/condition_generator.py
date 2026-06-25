@@ -6,7 +6,7 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-visual_size = ["80", "100", "120", "140", "160", "180"]
+visual_size = ["80", "100", "120", "140", "160", "180", "200", "220", "240"]
 scenario = ["one-hand", "two-hand"]
 delay_time = ["0.5"]
 direction = ["expand"]

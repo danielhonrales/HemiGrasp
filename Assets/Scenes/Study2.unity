@@ -1085,7 +1085,7 @@ Transform:
   m_GameObject: {fileID: 800018423}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: 0.75, z: 0}
+  m_LocalPosition: {x: -0.575, y: 0.75, z: 0}
   m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1143,7 +1143,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &982597953
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1183,7 +1183,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Placeholder Text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1562,14 +1562,18 @@ MonoBehaviour:
   visualRadius: 60
   physicalRadius: 60
   trialActive: 0
+  trialTime: 0
+  averageDist: 0
   targetVisualRadius: 0
   targetPhysicalRadius: 0
+  resetPhysicalRadius: 0
   delayTime: 0.5
   twoHand: 0
-  oneHandCalibOffset: {x: 0, y: -0.08, z: 0}
-  twoHandCalibOffset: {x: 0, y: -0.02, z: 0.01}
+  oneHandCalibOffsetSmall: {x: 0.01, y: -0.065, z: 0.03}
+  oneHandCalibOffsetLarge: {x: 0.01, y: -0.09, z: 0.03}
+  twoHandCalibOffset: {x: 0, y: 0, z: 0.03}
   tracking: 0
-  pid: 12
+  pid: 1
   currentTrial: 0
   totalTrials: 0
   baseFolder: Assets/data/study2_large/p_sheets
@@ -1580,7 +1584,9 @@ MonoBehaviour:
   sphere: {fileID: 2116133114}
   yesBin: {fileID: 1780659113}
   noBin: {fileID: 800018423}
-  graspTolerance: 1.1
+  instructionText: {fileID: 982597954}
+  graspTolerance: 0.04
+  dropTolerance: 0.1
 --- !u!1001 &1327887893
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1611,11 +1617,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8543071360257468031, guid: fe0e7657942d5a24ba1803ce6c0ea7fb, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.012
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8543071360257468031, guid: fe0e7657942d5a24ba1803ce6c0ea7fb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.411
+      value: -0.4
       objectReference: {fileID: 0}
     - target: {fileID: 8543071360257468031, guid: fe0e7657942d5a24ba1803ce6c0ea7fb, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2470,7 +2476,7 @@ Transform:
   m_GameObject: {fileID: 1780659113}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 0.75, z: 0}
+  m_LocalPosition: {x: 0.549, y: 0.75, z: 0}
   m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3466,7 +3472,7 @@ Transform:
   m_GameObject: {fileID: 2116133114}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 1, z: 0.5}
+  m_LocalPosition: {x: -0, y: 0.914, z: 0.378}
   m_LocalScale: {x: 0.15, y: 0.15, z: 0.15}
   m_ConstrainProportionsScale: 1
   m_Children: []

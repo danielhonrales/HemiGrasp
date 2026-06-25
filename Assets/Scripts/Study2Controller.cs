@@ -19,7 +19,9 @@ public class Study2Controller : MonoBehaviour {
     [Header("V: \t\t Change visual size")]
     [Header("P: \t\t Change physical size")]
     [Header("R: \t\t Set visual and physical to 62mm")]
+    [Header("M: \t\t Set visual and physical to 72mm")]
     [Header("F: \t\t Set visual and physical to 82mm")]
+    [Header("S: \t\t Swap dominant hand for one-hand")]
     [Header("C: \t\t Calibrate")]
     [Header("A: \t\t Toggle trial active")]
     [Header("T: \t\t Toggle tracking")]
@@ -70,7 +72,10 @@ public class Study2Controller : MonoBehaviour {
     [Header("Calibration"), Space(10)]
 
     [SerializeField]
-    private Vector3 oneHandCalibOffset;
+    private Vector3 oneHandCalibOffsetSmall;
+
+    [SerializeField]
+    private Vector3 oneHandCalibOffsetLarge;
 
     [SerializeField]
     private Vector3 twoHandCalibOffset;
@@ -113,11 +118,15 @@ public class Study2Controller : MonoBehaviour {
     public GameObject sphere;
     public GameObject yesBin;
     public GameObject noBin;
+    public TMP_Text instructionText;
 
     [Header("Misc. Settings"), Space(10)]
 
     [SerializeField]
     private float graspTolerance;
+    
+    [SerializeField]
+    private float dropTolerance;
 
     // Non-serialized variables
     private Vector3 homePosition;
@@ -127,9 +136,6 @@ public class Study2Controller : MonoBehaviour {
     
     private Transform leftHand;
     private Transform rightHand;
-
-    private float originalOneHandOffsetY;
-    private float originalTwoHandOffsetY;
 
     private Coroutine timeCoroutine;
     private Coroutine distCoroutine;
@@ -189,10 +195,6 @@ public class Study2Controller : MonoBehaviour {
                              .Find("XRHand_Wrist")
                              .Find("XRHand_MiddleMetacarpal")
                              .Find("XRHand_MiddleProximal");
-                         
-        // Set initial offset value
-        originalOneHandOffsetY = oneHandCalibOffset.y;
-        originalTwoHandOffsetY = twoHandCalibOffset.y;
 
         // Set default home position
         homePosition = sphere.transform.position;
@@ -201,6 +203,9 @@ public class Study2Controller : MonoBehaviour {
         Debug.Log("[HemiGrasp] Sleeping for 2s for Arduino reset...");
         Thread.Sleep(2000);
         Debug.Log("[HemiGrasp] Done sleeping!");
+
+        // Ensure devices are reset
+        ResetPhysical(62f, true);
     }
 
     void Update() {
@@ -212,6 +217,7 @@ public class Study2Controller : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.V))            { ScaleVisual(targetVisualRadius); }
         if (Input.GetKeyDown(KeyCode.P))            { ScalePhysical(targetPhysicalRadius); }
         if (Input.GetKeyDown(KeyCode.R))            { ResetAll(62f, 62f); }
+        if (Input.GetKeyDown(KeyCode.M))            { ResetAll(72f, 72f); }
         if (Input.GetKeyDown(KeyCode.F))            { ResetAll(82f, 82f); }
         if (Input.GetKeyDown(KeyCode.C))            { CalibrateVisual(); }
         if (Input.GetKeyDown(KeyCode.A))            { ToggleActive(); }
@@ -225,43 +231,74 @@ public class Study2Controller : MonoBehaviour {
 
         // Update sphere position if tracking is enabled
         if (!twoHand && tracking) {
-            float offset = MMtoUnityUnits((physicalRadius - visualRadius) / 2f);
-            sphere.transform.position = new Vector3(rightHand.position.x + oneHandCalibOffset.x,
-                                                    rightHand.position.y + oneHandCalibOffset.y + offset,
-                                                    rightHand.position.z + oneHandCalibOffset.z);
+            float offset = MMtoUnityUnits((physicalRadius - visualRadius)) / 2f;
+            
+            if (physicalRadius < 72f) {
+                sphere.transform.localPosition = new Vector3(oneHandCalibOffsetSmall.x,
+                                                             oneHandCalibOffsetSmall.y + offset,
+                                                             oneHandCalibOffsetSmall.z);
+            } else {
+                sphere.transform.localPosition = new Vector3(oneHandCalibOffsetLarge.x,
+                                                             oneHandCalibOffsetLarge.y + offset,
+                                                             oneHandCalibOffsetLarge.z);
+            }
         }
 
         if (twoHand && tracking) {
-            sphere.transform.position = new Vector3(((rightHand.position.x + leftHand.position.x) / 2f) + twoHandCalibOffset.x,
-                                                    ((rightHand.position.y + leftHand.position.y) / 2f) + twoHandCalibOffset.y,
-                                                    ((rightHand.position.z + leftHand.position.z) / 2f) + twoHandCalibOffset.z);
+            Vector3 intersection = (-rightHand.transform.up - leftHand.transform.up) * MMtoUnityUnits(visualRadius) / 4f; 
+            sphere.transform.position = new Vector3(((rightHand.position.x + leftHand.position.x) / 2f) + intersection.x + twoHandCalibOffset.x,
+                                                    ((rightHand.position.y + leftHand.position.y) / 2f) + intersection.y + twoHandCalibOffset.y,
+                                                    ((rightHand.position.z + leftHand.position.z) / 2f) + intersection.z + twoHandCalibOffset.z);
+        }
+
+        if (!tracking) {
+            sphere.transform.parent = null;
         }
 
         // If trial is active, check if object has been grabbed
         if (trialActive && !tracking && !twoHand) {
-            float palmAngleThreshold = 30f;
+            float palmAngleThreshold = 90f;
             Vector3 toSphere = (sphere.transform.position - rightHand.transform.position).normalized;
             float palmAngle = Vector3.Angle(-rightHand.transform.up, toSphere);
             bool palmFacingSphere = palmAngle < palmAngleThreshold;
 
             if (palmFacingSphere &&
-                Vector3.Distance(rightHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance)
+                Vector3.Distance(rightHand.transform.position, sphere.transform.position) < (MMtoUnityUnits(visualRadius) / 2f) + graspTolerance)
             {
                 tracking = true;
                 ScalePhysical(targetPhysicalRadius);
+                sphere.transform.parent = rightHand.transform;
+
+                // Start time tracking
+                timeCoroutine = StartCoroutine(TimeTracking());
+                distCoroutine = StartCoroutine(DistTracking());
             }
         } else if (trialActive && !tracking && twoHand) {
-            if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance &&
-                    Vector3.Distance(leftHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance) {
+            float palmAngleThreshold = 90f;
+            Vector3 rightToSphere = (sphere.transform.position - rightHand.transform.position).normalized;
+            float rightPalmAngle = Vector3.Angle(-rightHand.transform.up, rightToSphere);
+            bool rightPalmFacingSphere = rightPalmAngle < palmAngleThreshold;
+
+            Vector3 leftToSphere = (sphere.transform.position - leftHand.transform.position).normalized;
+            float leftPalmAngle = Vector3.Angle(-leftHand.transform.up, leftToSphere);
+            bool leftPalmFacingSphere = leftPalmAngle < palmAngleThreshold;
+
+            if (rightPalmFacingSphere && leftPalmFacingSphere &&
+                    Vector3.Distance(rightHand.transform.position, sphere.transform.position) < (MMtoUnityUnits(visualRadius) / 2f) + graspTolerance &&
+                    Vector3.Distance(leftHand.transform.position, sphere.transform.position) < (MMtoUnityUnits(visualRadius) / 2f) + graspTolerance) {
                 tracking = true;
-                ScalePhysical(targetPhysicalRadius); 
+                ScalePhysical(targetPhysicalRadius);
+
+                // Start time and distance tracking
+                timeCoroutine = StartCoroutine(TimeTracking());
+                distCoroutine = StartCoroutine(DistTracking());
             }
         }
 
         // If sphere is grabbed in two-hand and hands get too far apart, reset sphere 
         if (trialActive && tracking && twoHand) {
-            if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) > MMtoUnityUnits(visualRadius) * graspTolerance ||
-                    Vector3.Distance(leftHand.transform.position, sphere.transform.position) > MMtoUnityUnits(visualRadius) * graspTolerance) {
+            if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) > (MMtoUnityUnits(visualRadius) / 2f) + dropTolerance ||
+                    Vector3.Distance(leftHand.transform.position, sphere.transform.position) > (MMtoUnityUnits(visualRadius) / 2f) + dropTolerance) {
                 tracking = false;
                 ResetPhysical(resetPhysicalRadius); 
 
@@ -278,6 +315,13 @@ public class Study2Controller : MonoBehaviour {
 
         if (trialActive && noBin.GetComponent<BoxCollider>().bounds.Contains(sphere.transform.position)) {
             RecordResponse(0);
+        }
+
+        // Update instruction text
+        if (twoHand) {
+            instructionText.text = "Use both hands";
+        } else {
+            instructionText.text = "Use only your dominant hand";
         }
     }
 
@@ -389,7 +433,7 @@ public class Study2Controller : MonoBehaviour {
         StartCoroutine(WaitThenStop());
     }
 
-    private void ResetPhysical(float radius) {
+    private void ResetPhysical(float radius, bool forceTwoHand = false) {
         Debug.Log($"[HemiGrasp] Resetting physical to {radius}mm");
 
         physicalRadius = radius;
@@ -399,7 +443,7 @@ public class Study2Controller : MonoBehaviour {
         SendCmd("START", false);
         SendCmd($"A,{position}", false);
 
-        if (twoHand) {
+        if (twoHand || forceTwoHand) {
             SendCmd("START", true);
             SendCmd($"A,{position}", true);
         }
@@ -538,10 +582,6 @@ public class Study2Controller : MonoBehaviour {
     private IEnumerator WaitThenActive() {
         yield return new WaitForSeconds(1f);
         trialActive = true;
-
-        // Start time and distance tracking
-        timeCoroutine = StartCoroutine(TimeTracking());
-        distCoroutine = StartCoroutine(DistTracking());
     }
 
     // Move to next trial
@@ -554,18 +594,14 @@ public class Study2Controller : MonoBehaviour {
             Debug.Log("[HemiGrasp] ***** Set Finished! *****");
             StartCoroutine(AlertEnd());
         } else {
-            Debug.Log("[HemiGrasp] TEST 1");
             // Reset device(s)
             if (csvData[currentTrial][dataIndex["direction"]] == "expand") {
-                Debug.Log("[HemiGrasp] TEST 2");
                 resetPhysicalRadius = 62f;
             } else {
                 resetPhysicalRadius = 82f;
             }
 
-            Debug.Log("[HemiGrasp] TEST 3");
             ResetPhysical(resetPhysicalRadius);
-            Debug.Log("[HemiGrasp] TEST 4");
 
             StartCoroutine(WaitThenLoadTrial());
         }
@@ -584,6 +620,8 @@ public class Study2Controller : MonoBehaviour {
         tracking = false;
         StopCoroutine(timeCoroutine);
         StopCoroutine(distCoroutine);
+
+        sphere.transform.parent = null;
 
         // Record response
         Debug.Log($"[HemiGrasp] Recording {response} for trial {currentTrial}");
