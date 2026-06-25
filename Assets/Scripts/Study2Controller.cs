@@ -239,9 +239,16 @@ public class Study2Controller : MonoBehaviour {
 
         // If trial is active, check if object has been grabbed
         if (trialActive && !tracking && !twoHand) {
-            if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance) {
+            float palmAngleThreshold = 30f;
+            Vector3 toSphere = (sphere.transform.position - rightHand.transform.position).normalized;
+            float palmAngle = Vector3.Angle(-rightHand.transform.up, toSphere);
+            bool palmFacingSphere = palmAngle < palmAngleThreshold;
+
+            if (palmFacingSphere &&
+                Vector3.Distance(rightHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance)
+            {
                 tracking = true;
-                ScalePhysical(targetPhysicalRadius); 
+                ScalePhysical(targetPhysicalRadius);
             }
         } else if (trialActive && !tracking && twoHand) {
             if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance &&
