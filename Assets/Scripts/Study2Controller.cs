@@ -14,26 +14,14 @@ public class Study2Controller : MonoBehaviour {
 
     // Keyboard controls info
     [Header("Keyboard Controls"), Space(10)]
-    
-    [Header("1: \t\t Change visual object to sphere")]
-    [Header("2: \t\t Change visual object to grapefruit")]
-    [Header("3: \t\t Change visual object to basketball")]
-    [Header("4: \t\t Change visual object to football")]
-    [Header("5: \t\t Change visual object to piggy bank")]
-    [Header("6: \t\t Change visual object to shell")]
 
-    [Header("F1: \t\t Change physical shape to medium (sphere)")]
-    [Header("F2: \t\t Change physical shape to small (grapefruit)")]
-    [Header("F3: \t\t Change physical shape to large (basketball)")]
-    [Header("F4: \t\t Change physical shape to convex (football)")]
-    [Header("F5: \t\t Change physical shape to concave (piggy bank)")]
-    [Header("F6: \t\t Change physical shape to complex (shell)")]
-
-    [Header("Space: \t Change visual and physical shape")]
+    [Header("Space: \t Change visual and physical size")]
     [Header("V: \t\t Change visual size")]
-    [Header("P: \t\t Change physical size (turn table)")]
-    [Header("H: \t\t Set current table position as home (20mm)")]
+    [Header("P: \t\t Change physical size")]
+    [Header("R: \t\t Set visual and physical to 62mm")]
+    [Header("F: \t\t Set visual and physical to 82mm")]
     [Header("C: \t\t Calibrate")]
+    [Header("A: \t\t Toggle trial active")]
     [Header("T: \t\t Toggle tracking")]
     [Header("X: \t\t Toggle sphere visibility")]
     [Header("L: \t\t Load data from CSV")]
@@ -44,117 +32,158 @@ public class Study2Controller : MonoBehaviour {
 
     [Space(20)]
 
-    // Manual control
+    [Header("Current Status"), Space(10)]
+
+    [SerializeField]
+    private float visualRadius;
+
+    [SerializeField]
+    private float physicalRadius;
+
+    [SerializeField]
+    private bool trialActive;
+
     [Header("Manual Control"), Space(10)]
 
-    [SerializeField, Range(10f, 240f)]
-    private float visualRadius = 60f;
+    [SerializeField]
+    private float targetVisualRadius;
 
-    [SerializeField, Range(20f, 120f)]
-    private float physicalRadius = 60f;
+    [SerializeField]
+    private float targetPhysicalRadius;
+
+    [SerializeField]
+    private float delayTime;
+
+    [SerializeField]
+    private bool twoHand;
 
     // Calibration
     [Header("Calibration"), Space(10)]
 
     [SerializeField]
-    private Vector3 calibrationOffset;
+    private Vector3 oneHandCalibOffset;
 
-    private Vector3 homePosition;
+    [SerializeField]
+    private Vector3 twoHandCalibOffset;
 
     [SerializeField]
     private bool tracking;
 
-    // Study control
     [Header("Data Control"), Space(10)]
 
     [SerializeField]
-    private int pid = 1;
+    private int pid;
 
     [SerializeField]
-    private int currentTrial = 1;
+    private int currentTrial;
 
     [SerializeField]
     private int totalTrials;
 
-    // Study files
     [Header("Study Files"), Space(10)]
 
     [SerializeField]
-    private string baseFolder = "Assets/data/congruency/p_sheets";
+    private string baseFolder;
 
     [SerializeField]
     private string csvPath;
 
-    // Serial control
     [Header("Serial Control"), Space(10)]
 
     [SerializeField]
-    private string tablePort = "COM11";
+    private string leftHandPort;
     
+    [SerializeField]
+    private string rightHandPort;
+
     [SerializeField]
     private int baudRate = 115200;
 
-    // References
     [Header("References"), Space(10)]
 
     public GameObject sphere;
-    public TMP_Text instructionText;
+    public GameObject yesBin;
+    public GameObject noBin;
+
+    [Header("Misc. Settings"), Space(10)]
+
+    [SerializeField]
+    private float graspTolerance;
 
     // Non-serialized variables
+    private Vector3 homePosition;
 
-    private SerialPort tableSerial;
+    private SerialPort leftHandSerial;
+    private SerialPort rightHandSerial;
     
-    private Transform hand;
-    private float originalOffsetY;
+    private Transform leftHand;
+    private Transform rightHand;
+
+    private float originalOneHandOffsetY;
+    private float originalTwoHandOffsetY;
 
     // In-memory CSV data storage
     private string[] header;
     private List<string[]> csvData = new List<string[]>();
 
-    // Instruction text strings
-    private string placeText = "Place right hand on the sphere";
-    private string liftText = "Lift hand above the sphere";
-    private string alignText = "Throughout the study, line up the white dots until they turn green";
-    private string calibrationText = "Calibrating...";
-    private string congruentText = "Do the visual and physical sizes match?\n[Yes/No]";
-
     private readonly Dictionary<string, int> dataIndex = new() {
         { "pid", 0 },
         { "trial", 1 },
-        { "physicalSize", 2 },
-        { "visualSize", 3 },
-        { "congruent", 4 },
+        { "visualSize", 2 },
+        { "scenario", 3 },
+        { "delayTime", 4 },
+        { "direction", 5 },
+        { "congruent", 6 }
     };
 
     void Start() {
-        instructionText.text = calibrationText;
-
-        // Initialize serial connection
-        tableSerial = new SerialPort(tablePort, baudRate);
-        tableSerial.ReadTimeout = 10;
-        tableSerial.NewLine = "\n";
+        // Initialize serial connections
+        leftHandSerial = new SerialPort(leftHandPort, baudRate);
+        leftHandSerial.ReadTimeout = 10;
+        leftHandSerial.NewLine = "\n";
 
         try {
-            tableSerial.Open();
-            Debug.Log("Table serial connected");
+            leftHandSerial.Open();
+            Debug.Log("[HemiGrasp] Left hand serial connected");
         } catch (Exception e) {
-            Debug.LogError($"Table serial error: {e.Message}");
+            Debug.LogError($"[HemiGrasp] Left hand serial error: {e.Message}");
         }
 
-        // Find hand (middle finger) object
-        hand = GameObject.Find("[BuildingBlock] Hand Tracking right").transform
-                         .Find("Bones")
-                         .Find("XRHand_Wrist")
-                         .Find("XRHand_MiddleMetacarpal")
-                         .Find("XRHand_MiddleProximal");
+        rightHandSerial = new SerialPort(rightHandPort, baudRate);
+        rightHandSerial.ReadTimeout = 10;
+        rightHandSerial.NewLine = "\n";
+
+        try {
+            rightHandSerial.Open();
+            Debug.Log("[HemiGrasp] Right hand serial connected");
+        } catch (Exception e) {
+            Debug.LogError($"[HemiGrasp] Right hand serial error: {e.Message}");
+        }
+
+        // Find hand (middle finger) objects
+        rightHand = GameObject.Find("[BuildingBlock] Hand Tracking right").transform
+                              .Find("Bones")
+                              .Find("XRHand_Wrist")
+                              .Find("XRHand_MiddleMetacarpal")
+                              .Find("XRHand_MiddleProximal");
+                         
+        leftHand = GameObject.Find("[BuildingBlock] Hand Tracking left").transform
+                             .Find("Bones")
+                             .Find("XRHand_Wrist")
+                             .Find("XRHand_MiddleMetacarpal")
+                             .Find("XRHand_MiddleProximal");
                          
         // Set initial offset value
-        originalOffsetY = calibrationOffset.y;
+        originalOneHandOffsetY = oneHandCalibOffset.y;
+        originalTwoHandOffsetY = twoHandCalibOffset.y;
 
-        // Arduino reset delay
-        Debug.Log("Sleeping for 2s for Arduino reset...");
+        // Set default home position
+        homePosition = sphere.transform.position;
+
+        // Arduino reset delayTime
+        Debug.Log("[HemiGrasp] Sleeping for 2s for Arduino reset...");
         Thread.Sleep(2000);
-        Debug.Log("Done sleeping!");
+        Debug.Log("[HemiGrasp] Done sleeping!");
     }
 
     void Update() {
@@ -162,13 +191,15 @@ public class Study2Controller : MonoBehaviour {
         physicalRadius = Mathf.Round(physicalRadius * 20f) / 20f;
 
         // Check for keyboard input
-        if (Input.GetKeyDown(KeyCode.Space))        { ScaleAll(); }
-        if (Input.GetKeyDown(KeyCode.V))            { ScaleVisual(); }
-        if (Input.GetKeyDown(KeyCode.P))            { RotateTable(); }
-        if (Input.GetKeyDown(KeyCode.H))            { SetTableHome(); }
+        if (Input.GetKeyDown(KeyCode.Space))        { ScaleAll(targetVisualRadius, targetPhysicalRadius); }
+        if (Input.GetKeyDown(KeyCode.V))            { ScaleVisual(targetVisualRadius); }
+        if (Input.GetKeyDown(KeyCode.P))            { ScalePhysical(targetPhysicalRadius); }
+        if (Input.GetKeyDown(KeyCode.R))            { ResetAll(62f, 62f); }
+        if (Input.GetKeyDown(KeyCode.F))            { ResetAll(82f, 82f); }
         if (Input.GetKeyDown(KeyCode.C))            { CalibrateVisual(); }
+        if (Input.GetKeyDown(KeyCode.A))            { ToggleActive(); }
         if (Input.GetKeyDown(KeyCode.T))            { ToggleTracking(); }
-        if (Input.GetKeyDown(KeyCode.X))            { ToggleSphere(); }
+        if (Input.GetKeyDown(KeyCode.X))            { SetSphereVisibility(!sphere.activeSelf); }
         if (Input.GetKeyDown(KeyCode.L))            { LoadData(); }
         if (Input.GetKeyDown(KeyCode.LeftArrow))    { LoadTrial(); }
         if (Input.GetKeyDown(KeyCode.RightArrow))   { NextTrial(); }
@@ -176,75 +207,178 @@ public class Study2Controller : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.DownArrow))    { RecordResponse(0); }
 
         // Update sphere position if tracking is enabled
-        if (tracking) {
-            sphere.transform.position = new Vector3(hand.position.x + calibrationOffset.x,
-                                                    hand.position.y + calibrationOffset.y,
-                                                    hand.position.z + calibrationOffset.z);
+        if (!twoHand && tracking) {
+            float offset = MMtoUnityUnits((physicalRadius - visualRadius) / 2f);
+            sphere.transform.position = new Vector3(rightHand.position.x + oneHandCalibOffset.x,
+                                                    rightHand.position.y + oneHandCalibOffset.y + offset,
+                                                    rightHand.position.z + oneHandCalibOffset.z);
+        }
+
+        if (twoHand && tracking) {
+            sphere.transform.position = new Vector3(((rightHand.position.x + leftHand.position.x) / 2f) + twoHandCalibOffset.x,
+                                                    ((rightHand.position.y + leftHand.position.y) / 2f) + twoHandCalibOffset.y,
+                                                    ((rightHand.position.z + leftHand.position.z) / 2f) + twoHandCalibOffset.z);
+        }
+
+        // If trial is active, check if object has been grabbed
+        if (trialActive && !tracking && !twoHand) {
+            if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance) {
+                tracking = true;
+                ScalePhysical(targetPhysicalRadius); 
+            }
+        } else if (trialActive && !tracking && twoHand) {
+            if (Vector3.Distance(rightHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance &&
+                    Vector3.Distance(leftHand.transform.position, sphere.transform.position) < MMtoUnityUnits(visualRadius) * graspTolerance) {
+                tracking = true;
+                ScalePhysical(targetPhysicalRadius); 
+            }
+        }
+
+        // Check if sphere has been put in a response bin
+        if (trialActive && yesBin.GetComponent<BoxCollider>().bounds.Contains(sphere.transform.position)) {
+            RecordResponse(1);
+        }
+
+        if (trialActive && noBin.GetComponent<BoxCollider>().bounds.Contains(sphere.transform.position)) {
+            RecordResponse(0);
         }
     }
 
-    // Automatically close serial connection
+    // Send raw command to Arduino
+    private void SendCmd(string cmd, bool leftHand) {
+        if (leftHand && leftHandSerial != null && leftHandSerial.IsOpen) {
+            Debug.Log($"[HemiGrasp] Sending command \"{cmd}\" to left hand");
+            leftHandSerial.WriteLine(cmd);
+        } else if (!leftHand && rightHandSerial != null && rightHandSerial.IsOpen) {
+            Debug.Log($"[HemiGrasp] Sending command \"{cmd}\" to right hand");
+            rightHandSerial.WriteLine(cmd);
+        }
+    }
+
+    // Return devices to home position on quit
+    private void OnApplicationQuit() {
+        Debug.Log("[HemiGrasp] Returning devices to home position");
+
+        SendCmd("START", true);
+        SendCmd("A,0", true);
+
+        SendCmd("START", false);
+        SendCmd("A,0", false);
+
+        Thread.Sleep(500);
+
+        SendCmd("STOP", true);
+        SendCmd("STOP", false);
+    }
+
+    // Wait 0.5s then stop both PID controllers
+    private IEnumerator WaitThenStop() {
+        yield return new WaitForSeconds(0.5f);
+        SendCmd("STOP", true);
+        SendCmd("STOP", false);
+    }
+
+    // Automatically close serial connections
     void OnDestroy() {
-        if (tableSerial != null && tableSerial.IsOpen) {
-            tableSerial.Close();
+        if (leftHandSerial != null && leftHandSerial.IsOpen) {
+            Debug.Log("[HemiGrasp] Closing left hand serial");
+            leftHandSerial.Close();
+        }
+
+        if (rightHandSerial != null && rightHandSerial.IsOpen) {
+            Debug.Log("[HemiGrasp] Closing right hand serial");
+            rightHandSerial.Close();
         }
     }
 
-    // Set the sphere scale and rotate the table to match the set visual and physical radii
-    private void ScaleAll() {
-        ScaleVisual();
-        RotateTable();
+    // Scale the visual and physical to the target radii
+    private void ScaleAll(float vRadius, float pRadius) {
+        ScaleVisual(vRadius);
+        ScalePhysical(pRadius);
     }
 
-    // Set the sphere scale to match the set visual radius
-    private void ScaleVisual() {
-        float scaleVal = MMtoUnityUnits(visualRadius);
-        sphere.transform.localScale = new Vector3(scaleVal, scaleVal, scaleVal);
+    // Reset the visual and physical to the target radii
+    private void ResetAll(float vRadius, float pRadius) {
+        ScaleVisual(vRadius);
+        ResetPhysical(pRadius);
+    }
+
+    // Set the sphere scale to match the target visual radius
+    private void ScaleVisual(float radius) {
+        Debug.Log($"[HemiGrasp] Scaling visual to {radius}mm");
+
+        visualRadius = radius;
+
+        sphere.transform.localScale = new Vector3(MMtoUnityUnits(radius),
+                                                  MMtoUnityUnits(radius),
+                                                  MMtoUnityUnits(radius));
+        
+        sphere.transform.position = homePosition;
 
         // Offset visual to match height
-        sphere.transform.position = homePosition;
-        float visualOffset = (60f - visualRadius) * 0.001f;
+        float offset = 0;
+        if (!twoHand) {
+            offset = MMtoUnityUnits((physicalRadius - visualRadius) / 2f);
+        }
+
         sphere.transform.position = new Vector3(sphere.transform.position.x,
-                                                sphere.transform.position.y + visualOffset,
+                                                sphere.transform.position.y + offset,
                                                 sphere.transform.position.z);
     }
 
-    // Rotate the table to match the set physical radius
-    private void RotateTable() {
-        switch (physicalRadius) {
-            case 20:
-                tableSerial.WriteLine("MOVE,0");
-                break;
-            case 40:
-                tableSerial.WriteLine("MOVE,4");
-                break;
-            case 60:
-                tableSerial.WriteLine("MOVE,2");
-                break;
-            case 80:
-                tableSerial.WriteLine("MOVE,3");
-                break;
-            case 100:
-                tableSerial.WriteLine("MOVE,5");
-                break;
-            case 120:
-                tableSerial.WriteLine("MOVE,1");
-                break;
-            default:
-                Debug.LogError($"Physical radius {physicalRadius} is not valid!");
-                break;
+    // Set the device(s) scale to match the target physical radius
+    private void ScalePhysical(float radius) {
+        Debug.Log($"[HemiGrasp] Scaling physical to {radius}mm");
+
+        physicalRadius = radius;
+
+        int position = MMtoDevice(radius);
+        int speed = (int)(20f / delayTime);
+
+        if (speed < 10) {
+            speed = 10;
+        } else if (speed > 40) {
+            speed = 40;
         }
+
+        SendCmd("START", false);
+        SendCmd($"D,{position},{speed}", false);
+
+        if (twoHand) {
+            SendCmd("START", true);
+            SendCmd($"D,{position},{speed}", true);
+        }
+
+        StartCoroutine(WaitThenStop());
     }
 
-    // Set the current table position as its home position
-    private void SetTableHome() {
-        tableSerial.WriteLine("HOME");
+    private void ResetPhysical(float radius) {
+        Debug.Log($"[HemiGrasp] Resetting physical to {radius}mm");
+
+        physicalRadius = radius;
+
+        int position = MMtoDevice(radius);
+
+        SendCmd("START", false);
+        SendCmd($"A,{position}", false);
+
+        if (twoHand) {
+            SendCmd("START", true);
+            SendCmd($"A,{position}", true);
+        }
+
+        StartCoroutine(WaitThenStop());
     }
 
     // Save the current sphere location as its home position
     private void CalibrateVisual() {
+        Debug.Log("[HemiGrasp] Setting current sphere location as home position");
         homePosition = sphere.transform.position;
-        instructionText.text = alignText;
+    }
+
+    // Toggle if the trial is active
+    private void ToggleActive() {
+        trialActive = !trialActive;
     }
 
     // Toggle if the sphere is tracked to the hand
@@ -253,21 +387,8 @@ public class Study2Controller : MonoBehaviour {
     }
 
     // Toggle sphere visibility
-    private void ToggleSphere() {
-        sphere.SetActive(!sphere.activeSelf);
-
-        if (sphere.activeSelf) {
-            instructionText.text = placeText;
-            StartCoroutine(WaitThenAsk());
-        } else {
-            instructionText.text = liftText;
-        }
-    }
-
-    // Wait 3 seconds before displaying the congruency question text
-    private IEnumerator WaitThenAsk() {
-        yield return new WaitForSeconds(3.0f);
-        instructionText.text = congruentText;
+    private void SetSphereVisibility(bool on) {
+        sphere.SetActive(on);
     }
 
     // Load trial data from given CSV file
@@ -278,7 +399,7 @@ public class Study2Controller : MonoBehaviour {
 
         // Check for conditions CSV file
         if (!File.Exists(csvPath)) {
-            Debug.LogError($"CSV file not found! Path: {csvPath}");
+            Debug.LogError($"[HemiGrasp] CSV file not found! Path: {csvPath}");
             return;
         }
 
@@ -288,7 +409,7 @@ public class Study2Controller : MonoBehaviour {
 
         // Log header (then skip)
         header = lines[0].Split(',');
-        Debug.Log($"CSV Header: {string.Join(',', header)}");
+        Debug.Log($"[HemiGrasp] CSV Header: {string.Join(',', header)}");
 
         // Load CSV data
         for (int i = 1; i < lines.Length; i++) {
@@ -305,16 +426,48 @@ public class Study2Controller : MonoBehaviour {
     // Load current trial data
     private void LoadTrial() {
         string[] trialData = csvData[currentTrial];
+
         string trialNum = trialData[dataIndex["trial"]];
-        string physicalSize = trialData[dataIndex["physicalSize"]];
         string visualSize = trialData[dataIndex["visualSize"]];
-        string congruent = trialData[dataIndex["congruent"]];
+        string scenario = trialData[dataIndex["scenario"]];
+        string delay = trialData[dataIndex["delayTime"]];
+        string direction = trialData[dataIndex["direction"]];
 
-        Debug.Log($"Trial {trialNum}: physicalSize={physicalSize}, visualSize={visualSize}, congruent={congruent}");
+        Debug.Log($"[HemiGrasp] Loading trial {trialNum}: visualSize={visualSize}, scenario={scenario}, delay={delay}, direction={direction}");
 
-        // Set physical and visual radii
-        physicalRadius = float.Parse(physicalSize);
-        visualRadius = physicalRadius * (float.Parse(visualSize) / 100f);
+        // Set target visual radius
+        targetVisualRadius = float.Parse(visualSize);
+
+        // Set scenario
+        if (scenario == "one-hand") {
+            twoHand = false;
+        } else {
+            twoHand = true;
+        }
+
+        // Set delay time
+        delayTime = float.Parse(delay);
+
+        // Set target physical radius
+        if (direction == "expand") {
+            targetPhysicalRadius = 82f;
+        } else {
+            targetPhysicalRadius = 62f;
+        }
+
+        // Scale visual, reset sphere position, and enable sphere visibility
+        ScaleVisual(targetVisualRadius);
+        sphere.transform.position = homePosition;
+        SetSphereVisibility(true);
+
+        // Set trial as active after 1 second
+        StartCoroutine(WaitThenActive());
+    }
+
+    // Set trial as active after 1 second
+    private IEnumerator WaitThenActive() {
+        yield return new WaitForSeconds(1f);
+        trialActive = true;
     }
 
     // Move to next trial
@@ -324,23 +477,42 @@ public class Study2Controller : MonoBehaviour {
         // Check for last trial
         if (currentTrial >= totalTrials) {
             SaveData();
-            Debug.Log("***** Set Finished! *****");
+            Debug.Log("[HemiGrasp] ***** Set Finished! *****");
             StartCoroutine(AlertEnd());
         } else {
-            LoadTrial();
+            // Reset device(s)
+            if (csvData[currentTrial][dataIndex["direction"]] == "expand") {
+                ResetPhysical(62f);
+            } else {
+                ResetPhysical(82f);
+            }
+
+            StartCoroutine(WaitThenLoadTrial());
         }
+    }
+
+    // Wait 1s to load next trial
+    private IEnumerator WaitThenLoadTrial() {
+        yield return new WaitForSeconds(1f);
+        LoadTrial();
     }
 
     // Record user's response in the CSV
     private void RecordResponse(int response) {
-        Debug.Log($"Recording {response} for trial {currentTrial}");
+        // Set trial as no longer active
+        trialActive = false;
+        tracking = false;
+
+        Debug.Log($"[HemiGrasp] Recording {response} for trial {currentTrial}");
         csvData[currentTrial][dataIndex["congruent"]] = response.ToString();
 
         // Save updated CSV
         SaveData();
 
-        // Disable sphere visibility
-        ToggleSphere();
+        // Disable sphere visibility and load next trial
+        SetSphereVisibility(false);
+        sphere.transform.position = homePosition;
+        NextTrial();
     }
 
     // Save data to CSV file
@@ -361,6 +533,11 @@ public class Study2Controller : MonoBehaviour {
     // Convert from millimeters to Unity units
     private float MMtoUnityUnits(float mm) {
         return mm * 0.002f;
+    }
+
+    // Convert from millimeters to device 0-100
+    private int MMtoDevice(float mm) {
+        return (int)(Mathf.InverseLerp(62f, 82f, mm) * 100);
     }
 
     // Alert that the set has ended

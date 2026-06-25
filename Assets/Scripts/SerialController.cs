@@ -19,6 +19,8 @@ public class SerialController : MonoBehaviour
     private SerialPort secondHandSerial;
     private System.Random rng = new System.Random();
 
+    public DynamicController dynamicController;
+
     void Start()
     {
         firstHandSerial = new SerialPort(firstHandPort, baudRate);
@@ -156,7 +158,15 @@ public class SerialController : MonoBehaviour
             Debug.Log($"Rand pos: A {(randA * 10):0} | B {(randB * 10):0}");
         }
 
-        SendCmd($"{activeMotor},{location}", secondHand);
+        if (dynamicController.currentShape == DynamicController.Shape.Sphere) {
+            SendCmd($"{activeMotor},{location}", secondHand);
+        } else if (dynamicController.currentShape == DynamicController.Shape.Tall) {
+            SendCmd($"M,{location}", secondHand);
+        } else if (dynamicController.currentShape == DynamicController.Shape.Wide) {
+            SendCmd($"T,{location}", secondHand);
+            SendCmd($"L,{location}", secondHand);
+        }
+
         //Thread.Sleep(1000);
 
         //SendCmd("STOP");
@@ -257,7 +267,15 @@ public class SerialController : MonoBehaviour
 
     public void DynamicCommand(int position, int speed, bool secondHand = false) {
         SendCmd("START", secondHand);
-        SendCmd($"D,{position},{speed}", secondHand);
+
+        if (dynamicController.currentShape == DynamicController.Shape.Sphere) {
+            SendCmd($"D,{position},{speed}", secondHand);
+        } else if (dynamicController.currentShape == DynamicController.Shape.Tall) {
+            SendCmd($"DM,{position},{speed}", secondHand);
+        } else if (dynamicController.currentShape == DynamicController.Shape.Wide) {
+            SendCmd($"DT,{position},{speed}", secondHand);
+            SendCmd($"DL,{position},{speed}", secondHand);
+        }
     }
 
     // ---------------- INPUT HELPERS ----------------

@@ -23,11 +23,24 @@ public class DynamicController : MonoBehaviour {
 
     [Space(20)]
 
-    [Header("Indicator: TRUE if this trial is static")]
+    [Header("Testing")]
+    public bool disableOneHandClamping;
+    public bool disableFingerClamping;
+
+    [Space(10), Header("Indicator: TRUE if this trial is static")]
     public bool isStaticTrial;
 
     [Space(10), Header("One-hand: FALSE, Two-hand: TRUE")]
     public bool twoHand;
+
+    public enum Shape {
+        Sphere,
+        Tall,
+        Wide
+    }
+
+    [Space(10), Header("Current Shape")]
+    public Shape currentShape;
 
     [Space(10), Header("Current State (mm)")]
     public float currentVisualRadius;
@@ -88,8 +101,9 @@ public class DynamicController : MonoBehaviour {
 
         // Update sphere position if tracking is enabled
         if (!twoHand && tracking) {
+            float offset = MMtoUnityUnits((currentPhysicalRadius - currentVisualRadius) + offsetConstant) * offsetMultiplier;
             sphere.transform.position = new Vector3(rightHand.position.x + calibrationOffset.x,
-                                                    rightHand.position.y + calibrationOffset.y,
+                                                    rightHand.position.y + calibrationOffset.y + offset,
                                                     rightHand.position.z + calibrationOffset.z);
         }
         if (twoHand && tracking) {
@@ -100,6 +114,8 @@ public class DynamicController : MonoBehaviour {
     }
 
     private void OnApplicationQuit() {
+        currentShape = Shape.Sphere;
+
         serialController.GoTo(0, false);
         serialController.GoTo(0, true);
         Thread.Sleep(1000);
@@ -136,13 +152,24 @@ public class DynamicController : MonoBehaviour {
     // Change size of sphere
     private void SetVisualRadius(float radius) {
         currentVisualRadius = radius;
-        sphere.transform.localScale = new Vector3(MMtoUnityUnits(radius),
-                                                  MMtoUnityUnits(radius),
-                                                  MMtoUnityUnits(radius));
+
+        if (currentShape == Shape.Sphere) {
+            sphere.transform.localScale = new Vector3(MMtoUnityUnits(radius),
+                                                      MMtoUnityUnits(radius),
+                                                      MMtoUnityUnits(radius));
+        } else if (currentShape == Shape.Tall) {
+            sphere.transform.localScale = new Vector3(MMtoUnityUnits(radius),
+                                                      MMtoUnityUnits(60f),
+                                                      MMtoUnityUnits(60f));
+        } else if (currentShape == Shape.Wide) {
+            sphere.transform.localScale = new Vector3(MMtoUnityUnits(60f),
+                                                      MMtoUnityUnits(radius),
+                                                      MMtoUnityUnits(60f));
+        }
 
         // Offset visual position to match top of physical and visual
         float offset = 0;
-        if (!twoHand) {
+        if (!twoHand && currentShape != Shape.Wide) {
             offset = MMtoUnityUnits((currentPhysicalRadius - currentVisualRadius) + offsetConstant) * offsetMultiplier;
         }
         // Debug.Log($"PHYSICAL: {currentPhysicalRadius}  VISUAL: {currentVisualRadius}  DIFFERENCE: {currentPhysicalRadius - currentVisualRadius}  OFFSET: {offset}");
@@ -202,11 +229,12 @@ public class DynamicController : MonoBehaviour {
 
         responseIndicator.GetComponent<Renderer>().material.color = Color.green;
 
-        if (isStaticTrial) {
-            StartCoroutine(WaitThenDisappear(2f));
-        } else {
-            StartCoroutine(WaitThenDisappear(1f));
-        }
+        // Make the sphere disappear after some time
+        // if (isStaticTrial) {
+        //     StartCoroutine(WaitThenDisappear(2f));
+        // } else {
+        //     StartCoroutine(WaitThenDisappear(1f));
+        // }
     }
 
     public IEnumerator WaitThenDisappear(float seconds) {
