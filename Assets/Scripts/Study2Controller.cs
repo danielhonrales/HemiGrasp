@@ -128,6 +128,9 @@ public class Study2Controller : MonoBehaviour {
     [SerializeField]
     private float dropTolerance;
 
+    [SerializeField]
+    private float twoHandInwardShift;
+
     // Non-serialized variables
     private Vector3 homePosition;
 
@@ -136,6 +139,9 @@ public class Study2Controller : MonoBehaviour {
     
     private Transform leftHand;
     private Transform rightHand;
+
+    private Transform leftHandWrist;
+    private Transform rightHandWrist;
 
     private Coroutine timeCoroutine;
     private Coroutine distCoroutine;
@@ -195,6 +201,15 @@ public class Study2Controller : MonoBehaviour {
                              .Find("XRHand_Wrist")
                              .Find("XRHand_MiddleMetacarpal")
                              .Find("XRHand_MiddleProximal");
+                             
+        // Find hand (wrist) objects
+        rightHandWrist = GameObject.Find("[BuildingBlock] Hand Tracking right").transform
+                                   .Find("Bones")
+                                   .Find("XRHand_Wrist");
+                         
+        leftHandWrist = GameObject.Find("[BuildingBlock] Hand Tracking left").transform
+                                  .Find("Bones")
+                                  .Find("XRHand_Wrist");
 
         // Set default home position
         homePosition = sphere.transform.position;
@@ -209,6 +224,16 @@ public class Study2Controller : MonoBehaviour {
     }
 
     void Update() {
+        // Push hands closer together for two-hand
+        if (twoHand) {
+            leftHandWrist.transform.position = new Vector3(leftHandWrist.transform.position.x + MMtoUnityUnits(twoHandInwardShift / 2f),
+                                                           leftHandWrist.transform.position.y,
+                                                           leftHandWrist.transform.position.z);
+            rightHandWrist.transform.position = new Vector3(rightHandWrist.transform.position.x - MMtoUnityUnits(twoHandInwardShift / 2f),
+                                                            rightHandWrist.transform.position.y,
+                                                            rightHandWrist.transform.position.z);
+        }
+
         // Round physical radius to nearest 20mm
         physicalRadius = Mathf.Round(physicalRadius * 20f) / 20f;
 
@@ -253,6 +278,15 @@ public class Study2Controller : MonoBehaviour {
 
         if (!tracking) {
             sphere.transform.parent = null;
+        }
+
+        // Increase grasp/drop tolerance if sphere is too small for two-hand
+        if (twoHand && (MMtoUnityUnits(visualRadius) / 2f) < (MMtoUnityUnits(62f) / 2f)) {
+            graspTolerance = (((MMtoUnityUnits(62f) - MMtoUnityUnits(visualRadius)) / 2f) + 0.04f) * 1.2f;
+            dropTolerance = graspTolerance + 0.1f;
+        } else {
+            graspTolerance = 0.04f;
+            dropTolerance = 0.1f;
         }
 
         // If trial is active, check if object has been grabbed
