@@ -291,7 +291,7 @@ public class Study2Controller : MonoBehaviour {
 
         // If trial is active, check if object has been grabbed
         if (trialActive && !tracking && !twoHand) {
-            float palmAngleThreshold = 90f;
+            float palmAngleThreshold = 60f;
             Vector3 toSphere = (sphere.transform.position - rightHand.transform.position).normalized;
             float palmAngle = Vector3.Angle(-rightHand.transform.up, toSphere);
             bool palmFacingSphere = palmAngle < palmAngleThreshold;
@@ -308,7 +308,7 @@ public class Study2Controller : MonoBehaviour {
                 distCoroutine = StartCoroutine(DistTracking());
             }
         } else if (trialActive && !tracking && twoHand) {
-            float palmAngleThreshold = 90f;
+            float palmAngleThreshold = 60f;
             Vector3 rightToSphere = (sphere.transform.position - rightHand.transform.position).normalized;
             float rightPalmAngle = Vector3.Angle(-rightHand.transform.up, rightToSphere);
             bool rightPalmFacingSphere = rightPalmAngle < palmAngleThreshold;
