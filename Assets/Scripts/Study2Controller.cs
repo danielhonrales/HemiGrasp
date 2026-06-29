@@ -15,6 +15,14 @@ public class Study2Controller : MonoBehaviour {
     // Keyboard controls info
     [Header("Keyboard Controls"), Space(10)]
 
+    [Header("1: \t\t (Practice) One-hand, grow, 80mm")]
+    [Header("2: \t\t (Practice) One-hand, grow, 240mm")]
+    [Header("3: \t\t (Practice) Two-hand, grow, 80mm")]
+    [Header("4: \t\t (Practice) Two-hand, grow, 240mm")]
+    [Header("5: \t\t (Practice) One-hand, shrink, 60mm")]
+    [Header("6: \t\t (Practice) One-hand, shrink, 20mm")]
+    [Header("7: \t\t (Practice) Two-hand, shrink, 60mm")]
+    [Header("8: \t\t (Practice) Two-hand, shrink, 20mm")]
     [Header("Space: \t Change visual and physical size")]
     [Header("V: \t\t Change visual size")]
     [Header("P: \t\t Change physical size")]
@@ -149,6 +157,8 @@ public class Study2Controller : MonoBehaviour {
     private float trialDistSum;
     private int trialDistNumSamples;
 
+    private bool previousTwoHand;
+
     // In-memory CSV data storage
     private string[] header;
     private List<string[]> csvData = new List<string[]>();
@@ -238,6 +248,14 @@ public class Study2Controller : MonoBehaviour {
         physicalRadius = Mathf.Round(physicalRadius * 20f) / 20f;
 
         // Check for keyboard input
+        if (Input.GetKeyDown(KeyCode.Alpha1))       { LoadPractice(1); }
+        if (Input.GetKeyDown(KeyCode.Alpha2))       { LoadPractice(2); }
+        if (Input.GetKeyDown(KeyCode.Alpha3))       { LoadPractice(3); }
+        if (Input.GetKeyDown(KeyCode.Alpha4))       { LoadPractice(4); }
+        if (Input.GetKeyDown(KeyCode.Alpha5))       { LoadPractice(5); }
+        if (Input.GetKeyDown(KeyCode.Alpha6))       { LoadPractice(6); }
+        if (Input.GetKeyDown(KeyCode.Alpha7))       { LoadPractice(7); }
+        if (Input.GetKeyDown(KeyCode.Alpha8))       { LoadPractice(8); }
         if (Input.GetKeyDown(KeyCode.Space))        { ScaleAll(targetVisualRadius, targetPhysicalRadius); }
         if (Input.GetKeyDown(KeyCode.V))            { ScaleVisual(targetVisualRadius); }
         if (Input.GetKeyDown(KeyCode.P))            { ScalePhysical(targetPhysicalRadius); }
@@ -539,6 +557,36 @@ public class Study2Controller : MonoBehaviour {
         trialDistNumSamples = 0;
     }
 
+    // Load practice trial data
+    private void LoadPractice(int practiceTrialNum) {
+        csvPath = "Assets/data/study2_practice.csv";
+
+        // Check for conditions CSV file
+        if (!File.Exists(csvPath)) {
+            Debug.LogError($"[HemiGrasp] CSV file not found! Path: {csvPath}");
+            return;
+        }
+
+        // Read CSV
+        csvData.Clear();
+        string[] lines = File.ReadAllLines(csvPath);
+
+        // Log header (then skip)
+        header = lines[0].Split(',');
+        Debug.Log($"[HemiGrasp] CSV Header: {string.Join(',', header)}");
+
+        // Load CSV data
+        for (int i = 1; i < lines.Length; i++) {
+            string[] cells = lines[i].Split(',');
+            csvData.Add(cells);
+        }
+
+        // Reset and load first trial
+        currentTrial = 0;
+        totalTrials = lines.Length - 1;
+        LoadTrial();
+    }
+
     // Load trial data from given CSV file
     private void LoadData() {
         string participantFolder = Path.Combine(baseFolder, $"p{pid}");
@@ -573,6 +621,9 @@ public class Study2Controller : MonoBehaviour {
 
     // Load current trial data
     private void LoadTrial() {
+        // Save previous scenario
+        previousTwoHand = twoHand;
+
         string[] trialData = csvData[currentTrial];
 
         string trialNum = trialData[dataIndex["trial"]];
@@ -603,17 +654,22 @@ public class Study2Controller : MonoBehaviour {
             targetPhysicalRadius = 62f;
         }
 
-        // Scale visual, reset sphere position, and enable sphere visibility
-        ScaleVisual(targetVisualRadius);
-        sphere.transform.position = homePosition;
-        SetSphereVisibility(true);
-
         // Set trial as active after 1 second
         StartCoroutine(WaitThenActive());
     }
 
     // Set trial as active after 1 second
     private IEnumerator WaitThenActive() {
+        // Wait 5s if switching scenarios
+        if (previousTwoHand != twoHand) {
+            yield return new WaitForSeconds(5f);
+        }
+
+        // Scale visual, reset sphere position, and enable sphere visibility
+        ScaleVisual(targetVisualRadius);
+        sphere.transform.position = homePosition;
+        SetSphereVisibility(true);
+
         yield return new WaitForSeconds(1f);
         trialActive = true;
     }
@@ -641,9 +697,9 @@ public class Study2Controller : MonoBehaviour {
         }
     }
 
-    // Wait 1s to load next trial
+    // Wait 0.25s to load next trial
     private IEnumerator WaitThenLoadTrial() {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.25f);
         LoadTrial();
     }
 
