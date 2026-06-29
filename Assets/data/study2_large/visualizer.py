@@ -3,116 +3,82 @@ import glob
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 pids = [1,2,3]
 
 data_dir = os.path.join(os.path.dirname(__file__), "p_sheets")
 csv_files = glob.glob(os.path.join(data_dir, "**", "*_conditions.csv"), recursive=True)
 
-df = pd.concat([pd.read_csv(f) for f in csv_files], ignore_index=True)
-df = df[df["pid"].isin(pids)]
+all_df = pd.concat([pd.read_csv(f) for f in csv_files], ignore_index=True)
+all_df = all_df[all_df["pid"].isin(pids)]
 
-speeds = sorted(df["physical_speed"].unique())
-scenarios = sorted(df["scenario"].unique())
+scenarios = sorted(all_df["scenario"].unique())
+visual_sizes = sorted(all_df["visualSize"].unique())
+
+base_results = os.path.join(os.path.dirname(__file__), "results")
+
+def generate_figures(df, results_dir, label):
+    os.makedirs(results_dir, exist_ok=True)
+
+    fig, axes = plt.subplots(len(scenarios), 1, figsize=(10, 5 * len(scenarios)), sharey=True, sharex=True)
+    if len(scenarios) == 1:
+        axes = [axes]
+
+    for row, scenario in enumerate(scenarios):
+        ax = axes[row]
+        sdf = df[df["scenario"] == scenario]
+        grouped = sdf.groupby("visualSize")["congruency"].mean()
+
+        colors = ['#416cc1' if v >= 0.7 else '#b0b0b0' for v in grouped.values]
+        ax.bar(grouped.index, grouped.values, width=15, color=colors)
+        ax.axhline(y=0.7, color='red', linestyle='--', alpha=0.7, label='P = 0.7')
+
+        ax.set_xticks(visual_sizes)
+        ax.set_ylabel("P(Congruency)")
+        ax.set_title(scenario)
+        ax.set_ylim(0, 1)
+        ax.legend()
+        ax.grid(axis='y', linestyle='--', alpha=0.3)
+
+        if row == len(scenarios) - 1:
+            ax.set_xlabel("Visual Size (mm)")
+
+    fig.suptitle(f"P(Congruency) by Visual Size — Expand ({label})")
+    plt.tight_layout()
+    fig.savefig(os.path.join(results_dir, "congruency.png"), dpi=300, bbox_inches="tight")
+    plt.close()
+
+    for metric, ylabel, filename in [("time", "Average Time (s)", "time.png"),
+                                      ("distance", "Average Distance", "distance.png")]:
+        fig, axes = plt.subplots(len(scenarios), 1, figsize=(10, 5 * len(scenarios)), sharey=True, sharex=True)
+        if len(scenarios) == 1:
+            axes = [axes]
+
+        for row, scenario in enumerate(scenarios):
+            ax = axes[row]
+            sdf = df[df["scenario"] == scenario]
+            grouped = sdf.groupby("visualSize")[metric].mean()
+
+            ax.bar(grouped.index, grouped.values, width=15, color='#416cc1')
+            ax.set_xticks(visual_sizes)
+            ax.set_ylabel(ylabel)
+            ax.set_title(scenario)
+            ax.grid(axis='y', linestyle='--', alpha=0.3)
+
+            if row == len(scenarios) - 1:
+                ax.set_xlabel("Visual Size (mm)")
+
+        fig.suptitle(f"{ylabel} by Visual Size — Expand ({label})")
+        plt.tight_layout()
+        fig.savefig(os.path.join(results_dir, filename), dpi=300, bbox_inches="tight")
+        plt.close()
 
 if min(pids) != max(pids):
-    results_dir = os.path.join(os.path.dirname(__file__), "results", f"p{min(pids)}-{max(pids)}")
+    group_dir = os.path.join(base_results, f"p{min(pids)}-{max(pids)}")
 else:
-    results_dir = os.path.join(os.path.dirname(__file__), "results", f"p{min(pids)}")
-os.makedirs(results_dir, exist_ok=True)
+    group_dir = os.path.join(base_results, f"p{min(pids)}")
+generate_figures(all_df, group_dir, f"p{min(pids)}-{max(pids)}" if min(pids) != max(pids) else f"p{min(pids)}")
 
-# --- Congruency curves (rows = scenarios, cols = speeds) ---
-fig, axes = plt.subplots(len(scenarios), len(speeds),
-                         figsize=(4 * len(speeds), 4 * len(scenarios)), sharey=True, sharex=True)
-
-for row, scenario in enumerate(scenarios):
-    sdf = df[df["scenario"] == scenario]
-    for col, speed in enumerate(speeds):
-        ax = axes[row, col]
-        subset = sdf[sdf["physical_speed"] == speed]
-        grouped = subset.groupby("visual_end_size")["congruency"].mean()
-        ax.plot(grouped.index, grouped.values, marker="o")
-        if row == 0:
-            ax.set_title(f"Speed = {speed}")
-        if row == len(scenarios) - 1:
-            ax.set_xlabel("Visual End Size")
-            ax.set_xticks(grouped.index)
-        if col == 0:
-            ax.set_ylabel(f"{scenario}\nP(Congruency)")
-        ax.set_ylim(0, 1)
-
-fig.suptitle("P(Congruency) by Visual End Size per Physical Speed")
-plt.tight_layout()
-fig.savefig(os.path.join(results_dir, "congruency.png"), dpi=300, bbox_inches="tight")
-plt.close()
-
-# --- Range bars (rows = scenarios) ---
-plt.rcParams["hatch.linewidth"] = 2.0
-fig2, axes2 = plt.subplots(len(scenarios), 1, figsize=(10, 6 * len(scenarios)), sharey=True, sharex=True)
-bar_width = 6
-
-for row, scenario in enumerate(scenarios):
-    ax2 = axes2[row]
-    sdf = df[df["scenario"] == scenario]
-    grouped_all = sdf.groupby(["physical_speed", "visual_end_size"])["congruency"].mean()
-
-    for speed in speeds:
-        series = grouped_all[speed].sort_index()
-        y = series.index.values
-        y_min, y_max = y.min(), y.max()
-
-        hatch_patch = patches.Rectangle(
-            (speed - bar_width / 2, y_min),
-            bar_width,
-            y_max - y_min,
-            linewidth=0.5,
-            edgecolor='#416cc1',
-            facecolor='none',
-            hatch='////',
-            alpha=0.8
-        )
-        ax2.add_patch(hatch_patch)
-
-        mask = series.values >= 0.7
-        if mask.any():
-            y_low = y[mask].min()
-            y_high = y[mask].max()
-            solid_patch = patches.Rectangle(
-                (speed - bar_width / 2, y_low),
-                bar_width,
-                y_high - y_low,
-                linewidth=0,
-                edgecolor='none',
-                facecolor='#416cc1',
-                alpha=1.0
-            )
-            ax2.add_patch(solid_patch)
-
-    if row == 0:
-        hatch_legend = patches.Rectangle(
-            (0, 0), 1, 1,
-            linewidth=0.5, edgecolor='#416cc1', facecolor='none',
-            hatch='////', alpha=0.8, label='Full range tested'
-        )
-        solid_legend = patches.Rectangle(
-            (0, 0), 1, 1,
-            linewidth=0, edgecolor='none', facecolor='#416cc1',
-            label='P ≥ 0.7'
-        )
-        ax2.legend(handles=[hatch_legend, solid_legend], loc='upper left')
-
-    ax2.set_xticks(speeds)
-    ax2.set_xlim(min(speeds) - 10, max(speeds) + 10)
-    ax2.set_ylim(60, 200)
-    ax2.set_yticks(np.arange(80, 200, 20))
-    ax2.set_ylabel(f"{scenario}\nVisual End Size (%)")
-    ax2.set_title(f"Congruency Bands — {scenario}")
-    ax2.grid(axis='y', linestyle='--', alpha=0.7)
-    if row == len(scenarios) - 1:
-        ax2.set_xlabel("Physical Speed (mm/s)")
-
-fig2.suptitle("Congruency Bands by Physical Speed")
-fig2.tight_layout()
-fig2.savefig(os.path.join(results_dir, "congruency_range.png"), dpi=300, bbox_inches="tight")
-plt.close()
+for pid in pids:
+    pid_dir = os.path.join(base_results, f"p{pid}")
+    generate_figures(all_df[all_df["pid"] == pid], pid_dir, f"p{pid}")
