@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-pids = [3,4]
+pids = [1,2,3,4]
 
 data_dir = os.path.join(os.path.dirname(__file__), "p_sheets")
 csv_files = glob.glob(os.path.join(data_dir, "**", "*_conditions.csv"), recursive=True)
@@ -17,8 +17,18 @@ visual_sizes = sorted(all_df["visualSize"].unique())
 
 base_results = os.path.join(os.path.dirname(__file__), "results")
 
+def average_time_by_scenario(df, label):
+    print(f"\n--- Average Time by Scenario [{label}] ---")
+    for scenario in sorted(df["scenario"].unique()):
+        sdf = df[df["scenario"] == scenario]["time"]
+        q1, q3 = sdf.quantile(0.25), sdf.quantile(0.75)
+        iqr = q3 - q1
+        filtered = sdf[(sdf >= q1 - 1.5 * iqr) & (sdf <= q3 + 1.5 * iqr)]
+        print(f"  {scenario}: {filtered.mean():.3f} s  (n={len(filtered)})")
+
 def generate_figures(df, results_dir, label):
     os.makedirs(results_dir, exist_ok=True)
+    average_time_by_scenario(df, label)
 
     fig, axes = plt.subplots(len(scenarios), 1, figsize=(10, 5 * len(scenarios)), sharey=True, sharex=True)
     if len(scenarios) == 1:
@@ -49,7 +59,7 @@ def generate_figures(df, results_dir, label):
     plt.close()
 
     for metric, ylabel, filename in [("time", "Average Time (s)", "time.png"),
-                                      ("distance", "Average Distance", "distance.png")]:
+                                      ("distance", "Average Distance (mm)", "distance.png")]:
         fig, axes = plt.subplots(len(scenarios), 1, figsize=(10, 5 * len(scenarios)), sharey=True, sharex=True)
         if len(scenarios) == 1:
             axes = [axes]
@@ -57,12 +67,19 @@ def generate_figures(df, results_dir, label):
         for row, scenario in enumerate(scenarios):
             ax = axes[row]
             sdf = df[df["scenario"] == scenario]
+            if metric == "time":
+                q1, q3 = sdf["time"].quantile(0.25), sdf["time"].quantile(0.75)
+                iqr = q3 - q1
+                sdf = sdf[(sdf["time"] >= q1 - 1.5 * iqr) & (sdf["time"] <= q3 + 1.5 * iqr)]
             grouped = sdf.groupby("visualSize")[metric].mean()
+            values = grouped.values * 1000 if metric == "distance" else grouped.values
 
-            ax.bar(grouped.index, grouped.values, width=15, color='#416cc1')
+            ax.bar(grouped.index, values, width=15, color='#416cc1')
             ax.set_xticks(visual_sizes)
             ax.set_ylabel(ylabel)
             ax.set_title(scenario)
+            if metric == "time":
+                ax.set_ylim(0, 5)
             ax.grid(axis='y', linestyle='--', alpha=0.3)
 
             if row == len(scenarios) - 1:
