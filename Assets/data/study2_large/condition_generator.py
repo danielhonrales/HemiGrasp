@@ -6,15 +6,14 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-visual_size = ["80", "100", "120", "140", "160", "180", "200", "220", "240"]
+visual_size = ["80", "90", "100", "110", "120", "130", "140", "150", "160", "170", "180"]
 scenario = ["one-hand", "two-hand"]
-delay_time = ["0.5"]
 direction = ["expand"]
 
 num_participants = 12
 repetitions = 5  # per condition
 
-num_trials_in_block = len(visual_size) * len(delay_time) * repetitions
+num_trials_in_block = len(visual_size) * repetitions
 
 # Output base folder
 output_base = 'study2_large/p_sheets'
@@ -23,7 +22,7 @@ os.makedirs(output_base, exist_ok=True)
 # -------------------------------
 # Generate all physical × visual × rendering conditions
 # -------------------------------
-conditions = list(itertools.product(visual_size, delay_time))
+conditions = visual_size#list(itertools.product(visual_size))
 
 # -------------------------------
 # Generate trials for one participant
@@ -43,13 +42,12 @@ def generate_participant_trials(pid):
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)
 
-    for trial_num, (visual, delay) in enumerate(repeated_conditions):
+    for trial_num, (visual) in enumerate(repeated_conditions):
         trial = {
             'pid': pid,
             'trial': trial_num,
             'visualSize': visual,
             'scenario': scen,
-            'delayTime': delay,
             'direction': direction[0],
             'congruency': None,
             'time': None,
@@ -66,13 +64,12 @@ def generate_participant_trials(pid):
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)
 
-    for trial_num, (visual, delay) in enumerate(repeated_conditions):
+    for trial_num, (visual) in enumerate(repeated_conditions):
         trial = {
             'pid': pid,
             'trial': trial_num + num_trials_in_block,
             'visualSize': visual,
             'scenario': scen,
-            'delayTime': delay,
             'direction': direction[0],
             'congruency': None,
             'time': None,

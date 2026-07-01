@@ -6,15 +6,14 @@ import os
 # -------------------------------
 # Define the conditions
 # -------------------------------
-visual_size = ["60", "55", "50", "45", "40", "35", "30", "25", "20"]
+visual_size = ["60", "58", "56", "54", "52", "50", "48", "46", "44", "42", "40"]
 scenario = ["one-hand", "two-hand"]
-delay_time = ["0.5"]
 direction = ["shrink"]
 
 num_participants = 12
 repetitions = 5  # per condition
 
-num_trials_in_block = len(visual_size) * len(delay_time) * repetitions
+num_trials_in_block = len(visual_size) * repetitions
 
 # Output base folder
 output_base = 'study2_small/p_sheets'
@@ -23,7 +22,7 @@ os.makedirs(output_base, exist_ok=True)
 # -------------------------------
 # Generate all physical × visual × rendering conditions
 # -------------------------------
-conditions = list(itertools.product(visual_size, delay_time))
+conditions = visual_size
 
 # -------------------------------
 # Generate trials for one participant
@@ -43,13 +42,12 @@ def generate_participant_trials(pid):
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)
 
-    for trial_num, (visual, delay) in enumerate(repeated_conditions):
+    for trial_num, (visual) in enumerate(repeated_conditions):
         trial = {
             'pid': pid,
             'trial': trial_num,
             'visualSize': visual,
             'scenario': scen,
-            'delayTime': delay,
             'direction': direction[0],
             'congruency': None,
             'time': None,
@@ -66,13 +64,12 @@ def generate_participant_trials(pid):
     # Counterbalance by shuffling order per participant
     random.shuffle(repeated_conditions)
 
-    for trial_num, (visual, delay) in enumerate(repeated_conditions):
+    for trial_num, (visual) in enumerate(repeated_conditions):
         trial = {
             'pid': pid,
             'trial': trial_num + num_trials_in_block,
             'visualSize': visual,
             'scenario': scen,
-            'delayTime': delay,
             'direction': direction[0],
             'congruency': None,
             'time': None,
