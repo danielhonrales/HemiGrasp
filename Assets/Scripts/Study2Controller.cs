@@ -168,11 +168,10 @@ public class Study2Controller : MonoBehaviour {
         { "trial", 1 },
         { "visualSize", 2 },
         { "scenario", 3 },
-        { "delayTime", 4 },
-        { "direction", 5 },
-        { "congruent", 6 },
-        { "time", 7 },
-        { "distance", 8 }
+        { "direction", 4 },
+        { "congruent", 5 },
+        { "time", 6 },
+        { "distance", 7 }
     };
 
     void Start() {
@@ -581,8 +580,8 @@ public class Study2Controller : MonoBehaviour {
             csvData.Add(cells);
         }
 
-        // Reset and load first trial
-        currentTrial = 0;
+        // Reset and load requested trial
+        currentTrial = practiceTrialNum - 1;
         totalTrials = lines.Length - 1;
         LoadTrial();
     }
@@ -629,10 +628,10 @@ public class Study2Controller : MonoBehaviour {
         string trialNum = trialData[dataIndex["trial"]];
         string visualSize = trialData[dataIndex["visualSize"]];
         string scenario = trialData[dataIndex["scenario"]];
-        string delay = trialData[dataIndex["delayTime"]];
+        // string delay = trialData[dataIndex["delayTime"]];
         string direction = trialData[dataIndex["direction"]];
 
-        Debug.Log($"[HemiGrasp] Loading trial {trialNum}: visualSize={visualSize}, scenario={scenario}, delay={delay}, direction={direction}");
+        Debug.Log($"[HemiGrasp] Loading trial {trialNum}: visualSize={visualSize}, scenario={scenario}, direction={direction}");
 
         // Set target visual radius
         targetVisualRadius = float.Parse(visualSize);
@@ -645,7 +644,7 @@ public class Study2Controller : MonoBehaviour {
         }
 
         // Set delay time
-        delayTime = float.Parse(delay);
+        // delayTime = float.Parse(delay);
 
         // Set target physical radius
         if (direction == "expand") {
