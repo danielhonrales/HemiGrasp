@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-pids = [1,2,3,4]
+pids = [1,2]
 
 data_dir = os.path.join(os.path.dirname(__file__), "p_sheets")
 csv_files = glob.glob(os.path.join(data_dir, "**", "*_conditions.csv"), recursive=True)

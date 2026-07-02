@@ -1,7 +1,7 @@
 pid,trial,visualSize,scenario,delayTime,direction,congruency,time,distance
-99,0,80,one-hand,0.5,expand,1,2.767057,
-99,1,240,one-hand,0.5,expand,0,8.569033,
-99,2,80,two-hand,0.5,expand,1,3.849242,0.2255564
+99,0,80,one-hand,0.5,1,2.822005,2.767057,
+99,1,240,one-hand,0.5,0,7.447048,8.569033,
+99,2,80,two-hand,0.5,1,9.113641,0.1874699,0.2255564
 99,3,240,two-hand,0.5,expand,1,4.082854,0.4795082
 99,4,60,one-hand,0.5,shrink,1,9.071242,
 99,5,20,one-hand,0.5,shrink,0,6.529928,
