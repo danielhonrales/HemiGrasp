@@ -40,7 +40,7 @@ def generate_figures(df, results_dir, label):
         grouped = sdf.groupby("visualSize")["congruency"].mean()
 
         colors = ['#416cc1' if v >= 0.7 else '#b0b0b0' for v in grouped.values]
-        ax.bar(grouped.index, grouped.values, width=15, color=colors)
+        ax.bar(grouped.index, grouped.values, width=7, color=colors)
         ax.axhline(y=0.7, color='red', linestyle='--', alpha=0.7, label='P = 0.7')
 
         ax.set_xticks(visual_sizes)
@@ -74,7 +74,7 @@ def generate_figures(df, results_dir, label):
             grouped = sdf.groupby("visualSize")[metric].mean()
             values = grouped.values * 1000 if metric == "distance" else grouped.values
 
-            ax.bar(grouped.index, values, width=15, color='#416cc1')
+            ax.bar(grouped.index, values, width=7, color='#416cc1')
             ax.set_xticks(visual_sizes)
             ax.set_ylabel(ylabel)
             ax.set_title(scenario)
