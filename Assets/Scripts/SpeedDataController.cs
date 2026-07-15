@@ -89,45 +89,45 @@ public class SpeedDataController : MonoBehaviour
         string[] trialData = csvData[currentTrial];
         Debug.Log($"[DATA] Trial {trialData[dataIndex["trial"]]}: physical={trialData[dataIndex["physical"]]}, visual={trialData[dataIndex["visual"]]}, congruency={trialData[dataIndex["congruency"]]}");
 
-        // if (trialData[dataIndex["direction"]] == "grow") {
-        //     dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
-        //     dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
-        // } else if (trialData[dataIndex["direction"]] == "shrink") {
-        //     dynamicController.physicalSpeed = -1 * float.Parse(csvData[currentTrial][dataIndex["physical"]]);
-        //     dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
-        // }
-
-        if (isGrowBlock) {
-            if (csvData[currentTrial][dataIndex["physical"]] == "0") {
-                dynamicController.physicalSpeed = 40f;
-                dynamicController.isStaticTrial = true;
-            } else {
-                dynamicController.sphere.SetActive(true);
-                dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
-                dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
-                dynamicController.isStaticTrial = false;
-
-                if (dynamicController.physicalSpeed < 12f) {
-                    dynamicController.physicalSpeed = 12f;
-                }
-            }
-            dynamicController.visualSpeed = (float.Parse(csvData[currentTrial][dataIndex["visual"]]) - 60f) / (20f / dynamicController.physicalSpeed);
-        } else {
-            if (csvData[currentTrial][dataIndex["physical"]] == "0") {
-                dynamicController.physicalSpeed = -40f;
-                dynamicController.isStaticTrial = true;
-            } else {
-                dynamicController.sphere.SetActive(true);
-                dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
-                dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
-                dynamicController.isStaticTrial = false;
-
-                if (dynamicController.physicalSpeed > -12f) {
-                    dynamicController.physicalSpeed = -12f;
-                }
-            }
-            dynamicController.visualSpeed = (80f - float.Parse(csvData[currentTrial][dataIndex["visual"]])) / (20f / dynamicController.physicalSpeed);
+        if (trialData[dataIndex["direction"]] == "grow") {
+            dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+            dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
+        } else if (trialData[dataIndex["direction"]] == "shrink") {
+            dynamicController.physicalSpeed = -1 * float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+            dynamicController.visualSpeed = dynamicController.physicalSpeed * (float.Parse(csvData[currentTrial][dataIndex["visual"]]) / 100f);
         }
+
+        // if (isGrowBlock) {
+        //     if (csvData[currentTrial][dataIndex["physical"]] == "0") {
+        //         dynamicController.physicalSpeed = 40f;
+        //         dynamicController.isStaticTrial = true;
+        //     } else {
+        //         dynamicController.sphere.SetActive(true);
+        //         dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
+        //         dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+        //         dynamicController.isStaticTrial = false;
+
+        //         if (dynamicController.physicalSpeed < 12f) {
+        //             dynamicController.physicalSpeed = 12f;
+        //         }
+        //     }
+        //     dynamicController.visualSpeed = (float.Parse(csvData[currentTrial][dataIndex["visual"]]) - 60f) / (20f / dynamicController.physicalSpeed);
+        // } else {
+        //     if (csvData[currentTrial][dataIndex["physical"]] == "0") {
+        //         dynamicController.physicalSpeed = -40f;
+        //         dynamicController.isStaticTrial = true;
+        //     } else {
+        //         dynamicController.sphere.SetActive(true);
+        //         dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.blue;
+        //         dynamicController.physicalSpeed = float.Parse(csvData[currentTrial][dataIndex["physical"]]);
+        //         dynamicController.isStaticTrial = false;
+
+        //         if (dynamicController.physicalSpeed > -12f) {
+        //             dynamicController.physicalSpeed = -12f;
+        //         }
+        //     }
+        //     dynamicController.visualSpeed = (80f - float.Parse(csvData[currentTrial][dataIndex["visual"]])) / (20f / dynamicController.physicalSpeed);
+        // }
     }
 
     public void NextTrial()
@@ -146,17 +146,17 @@ public class SpeedDataController : MonoBehaviour
 
     public void RecordResponse(int response)
     {
-        if (dynamicController.sphere.active) {
-            Debug.Log($"[DATA] Wait for sphere to disappear before recording response!");
-            return;
-        }
+        // if (dynamicController.sphere.active) {
+        //     Debug.Log($"[DATA] Wait for sphere to disappear before recording response!");
+        //     return;
+        // }
 
         Debug.Log($"[DATA] Recording {response} for trial {currentTrial}");
         csvData[currentTrial][dataIndex["congruency"]] = response.ToString();
 
         SaveData();
-        dynamicController.sphere.SetActive(false);
-        dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.red;
+        // dynamicController.sphere.SetActive(false);
+        // dynamicController.responseIndicator.GetComponent<Renderer>().material.color = Color.red;
 
         if (isGrowBlock) {
             dynamicController.ManualReset(62f);

@@ -293,7 +293,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &130727036
 Transform:
   m_ObjectHideFlags: 0
@@ -1664,10 +1664,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8bd169fdc94b524b84d06b67b807643, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  disableOneHandClamping: 0
-  disableFingerClamping: 0
+  disableOneHandClamping: 1
+  disableFingerClamping: 1
   isStaticTrial: 0
-  twoHand: 1
+  twoHand: 0
   currentShape: 0
   currentVisualRadius: 62
   currentPhysicalRadius: 62
@@ -1701,7 +1701,7 @@ MonoBehaviour:
   currentTrial: 1
   totalTrials: 0
   isGrowBlock: 1
-  baseFolder: Assets/data/study2_expand/p_sheets
+  baseFolder: Assets/data/study2_speed/p_sheets
   csvPath: 
   dynamicController: {fileID: 1168516025}
 --- !u!1001 &1327887893
@@ -2115,7 +2115,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1554294196
 Transform:
   m_ObjectHideFlags: 0
@@ -3670,7 +3670,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2126806403
 Transform:
   m_ObjectHideFlags: 0
