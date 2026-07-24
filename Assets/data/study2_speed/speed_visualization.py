@@ -8,12 +8,17 @@ import os
 import numpy as np
 
 # Load data
-pids = [1,2,3]
+P_THRESHOLD = 0.7
+pids = [1,2,3,4,5,6]
 
 all_trials = []
 all_data = []
 
 home_path = f"."
+
+pid_label = f"p{min(pids)}-{max(pids)}" if min(pids) != max(pids) else f"p{min(pids)}"
+output_dir = os.path.join(home_path, "output", pid_label)
+os.makedirs(output_dir, exist_ok=True)
 
 for pid in pids:
     file_path = f"{home_path}\\p_sheets\\p{pid}\\p{pid}_conditions.csv"
@@ -24,7 +29,7 @@ for pid in pids:
     df["visual"] = pd.to_numeric(df["visual"], errors="coerce")
 
     all_trials.append(df.copy())
-    df = df[df["binary"] == 1]
+    df = df[df["congruency"] == 1]
     all_data.append(df)
 
     physical_levels = sorted(df["physical"].unique())
@@ -60,7 +65,7 @@ for pid in pids:
     plt.yticks(np.arange(50, 210, 50))
     plt.title(f"P{pid}")
 
-    save_path = f"{home_path}\\output\\p{pid}.png"
+    save_path = os.path.join(output_dir, f"p{pid}.png")
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
 
 # All participants
@@ -72,7 +77,7 @@ df_trials = df_trials[df_trials["direction"] == "grow"]
 
 acceptance = (
     df_trials
-    .groupby(["physical", "visual"])["binary"]
+    .groupby(["physical", "visual"])["congruency"]
     .mean()
     .reset_index()
 )
@@ -84,7 +89,7 @@ acceptance["trueVisual"] = (
 heatmap_df = acceptance.pivot(
     index="trueVisual",
     columns="physical",
-    values="binary"
+    values="congruency"
 )
 
 heatmap_df = heatmap_df.sort_index()
@@ -93,7 +98,7 @@ heatmap_df = heatmap_df.sort_index(axis=1)
 heatmap_df2 = acceptance.pivot(
     index="visual",
     columns="physical",
-    values="binary"
+    values="congruency"
 )
 
 heatmap_df2 = heatmap_df2.sort_index()
@@ -110,6 +115,8 @@ fig, (ax, ax2) = plt.subplots(
 def draw_bars_top(axis, df, bar_width=4):
     for p in df.columns:
         col = df[p].dropna()
+        if len(col) == 0:
+            continue
         y = col.index.values
         y_min_ext = y.min()
         y_max_ext = y.max()
@@ -126,7 +133,7 @@ def draw_bars_top(axis, df, bar_width=4):
         )
         axis.add_patch(hatch_patch)
 
-        mask = col.values >= 0.7
+        mask = col.values >= P_THRESHOLD
         if mask.any():
             # FIXED: use actual y values directly
             y_low = y[mask].min()
@@ -147,6 +154,8 @@ def draw_bars_top(axis, df, bar_width=4):
 def draw_bars_bottom(axis, df, bar_width=4):
     for p in df.columns:
         col = df[p].dropna()
+        if len(col) == 0:
+            continue
         y = col.index.values
         y_min_ext = y.min()
         y_max_ext = y.max()
@@ -163,7 +172,7 @@ def draw_bars_bottom(axis, df, bar_width=4):
         )
         axis.add_patch(hatch_patch)
 
-        mask = col.values >= 0.7
+        mask = col.values >= P_THRESHOLD
         if mask.any():
             # FIXED: use actual y values directly
             y_low = y[mask].min()
@@ -199,7 +208,7 @@ solid_patch_legend = patches.Rectangle(
     linewidth=0,
     edgecolor='none',
     facecolor='#416cc1',
-    label='P ≥ 0.7'
+    label=f'P ≥ {P_THRESHOLD}'
 )
 ax.legend(handles=[hatch_patch_legend, solid_patch_legend], loc='upper left')
 
@@ -225,7 +234,7 @@ ax2.grid(axis='y', linestyle='--', alpha=0.7)
 plt.tight_layout()
 fig.subplots_adjust(hspace=0.08)
 
-save_path = f"{home_path}\\output\\all_grow.png"
+save_path = os.path.join(output_dir, "all_grow.png")
 plt.savefig(save_path, dpi=300, bbox_inches="tight")
 plt.close()
 
@@ -236,7 +245,7 @@ df_trials = df_trials[df_trials["direction"] == "shrink"]
 
 acceptance = (
     df_trials
-    .groupby(["physical", "visual"])["binary"]
+    .groupby(["physical", "visual"])["congruency"]
     .mean()
     .reset_index()
 )
@@ -248,7 +257,7 @@ acceptance["trueVisual"] = (
 heatmap_df = acceptance.pivot(
     index="trueVisual",
     columns="physical",
-    values="binary"
+    values="congruency"
 )
 
 heatmap_df = heatmap_df.sort_index()
@@ -257,7 +266,7 @@ heatmap_df = heatmap_df.sort_index(axis=1)
 heatmap_df2 = acceptance.pivot(
     index="visual",
     columns="physical",
-    values="binary"
+    values="congruency"
 )
 
 heatmap_df2 = heatmap_df2.sort_index()
@@ -274,6 +283,8 @@ fig, (ax, ax2) = plt.subplots(
 def draw_bars_top(axis, df, bar_width=4):
     for p in df.columns:
         col = df[p].dropna()
+        if len(col) == 0:
+            continue
         y = col.index.values
         y_min_ext = y.min()
         y_max_ext = y.max()
@@ -290,7 +301,7 @@ def draw_bars_top(axis, df, bar_width=4):
         )
         axis.add_patch(hatch_patch)
 
-        mask = col.values >= 0.7
+        mask = col.values >= P_THRESHOLD
         if mask.any():
             # FIXED: use actual y values directly
             y_low = y[mask].min()
@@ -311,6 +322,8 @@ def draw_bars_top(axis, df, bar_width=4):
 def draw_bars_bottom(axis, df, bar_width=4):
     for p in df.columns:
         col = df[p].dropna()
+        if len(col) == 0:
+            continue
         y = col.index.values
         y_min_ext = y.min()
         y_max_ext = y.max()
@@ -327,7 +340,7 @@ def draw_bars_bottom(axis, df, bar_width=4):
         )
         axis.add_patch(hatch_patch)
 
-        mask = col.values >= 0.7
+        mask = col.values >= P_THRESHOLD
         if mask.any():
             # FIXED: use actual y values directly
             y_low = y[mask].min()
@@ -363,7 +376,7 @@ solid_patch_legend = patches.Rectangle(
     linewidth=0,
     edgecolor='none',
     facecolor='#416cc1',
-    label='P ≥ 0.7'
+    label=f'P ≥ {P_THRESHOLD}'
 )
 ax.legend(handles=[hatch_patch_legend, solid_patch_legend], loc='upper left')
 
@@ -389,6 +402,6 @@ ax2.grid(axis='y', linestyle='--', alpha=0.7)
 plt.tight_layout()
 fig.subplots_adjust(hspace=0.08)
 
-save_path = f"{home_path}\\output\\all_shrink.png"
+save_path = os.path.join(output_dir, "all_shrink.png")
 plt.savefig(save_path, dpi=300, bbox_inches="tight")
 plt.close()
