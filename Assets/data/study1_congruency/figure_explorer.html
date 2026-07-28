@@ -1,0 +1,846 @@
+
+<title>Psychometric Curves Explorer</title>
+<style>
+:root {
+  --page:       #f2f2ef;
+  --surface:    #fcfcfb;
+  --sidebar:    #e8e8e4;
+  --ink-1:      #0d0d0b;
+  --ink-2:      #4e4d4a;
+  --ink-m:      #888784;
+  --grid-c:     #ddddd8;
+  --axis-c:     #c0bfba;
+  --border:     rgba(13,13,11,0.12);
+  --accent:     #2a78d6;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --s4: #eda100; --s5: #e87ba4; --s6: #008300;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page:    #111114; --surface: #1a1a19; --sidebar: #0d0d10;
+    --ink-1:   #f5f5f4; --ink-2:   #c3c2b7; --ink-m:   #898781;
+    --grid-c:  #2c2c2a; --axis-c:  #383835; --border:  rgba(245,245,244,0.10);
+    --accent:  #3987e5;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --s4: #c98500; --s5: #d55181; --s6: #008300;
+  }
+}
+:root[data-theme="dark"] {
+  --page:    #111114; --surface: #1a1a19; --sidebar: #0d0d10;
+  --ink-1:   #f5f5f4; --ink-2:   #c3c2b7; --ink-m:   #898781;
+  --grid-c:  #2c2c2a; --axis-c:  #383835; --border:  rgba(245,245,244,0.10);
+  --accent:  #3987e5;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --s4: #c98500; --s5: #d55181; --s6: #008300;
+}
+:root[data-theme="light"] {
+  --page:    #f2f2ef; --surface: #fcfcfb; --sidebar: #e8e8e4;
+  --ink-1:   #0d0d0b; --ink-2:   #4e4d4a; --ink-m:   #888784;
+  --grid-c:  #ddddd8; --axis-c:  #c0bfba; --border:  rgba(13,13,11,0.12);
+  --accent:  #2a78d6;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --s4: #eda100; --s5: #e87ba4; --s6: #008300;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 12px;
+  background: var(--page);
+  color: var(--ink-1);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: 198px;
+  flex-shrink: 0;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.cg { padding: 9px 11px; border-bottom: 1px solid var(--border); }
+.cg:last-child { border-bottom: none; }
+.cl {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-m);
+  margin-bottom: 5px;
+}
+.cr { display: flex; align-items: center; padding: 1.5px 0; }
+.cr label {
+  display: flex; align-items: center; gap: 5px;
+  cursor: pointer; color: var(--ink-2); font-size: 11.5px;
+  line-height: 1.35; width: 100%;
+}
+.cr label:hover { color: var(--ink-1); }
+input[type="radio"],input[type="checkbox"] {
+  accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0;
+}
+.rrow { display: flex; align-items: center; gap: 7px; padding: 2px 0; }
+input[type="range"] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+.rv {
+  font-size: 11px; font-variant-numeric: tabular-nums;
+  color: var(--ink-m); min-width: 22px; text-align: right;
+}
+
+/* ── CONTENT ── */
+#content { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+#topbar {
+  display: flex; align-items: stretch; gap: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--page);
+  height: 37px; flex-shrink: 0;
+  padding-left: 14px;
+}
+#topbar h1 {
+  font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+  display: flex; align-items: center; margin-right: 14px;
+  white-space: nowrap; letter-spacing: 0.01em;
+}
+.tabs { display: flex; }
+.tab {
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0 11px; height: 37px; margin-bottom: -1px;
+  font-size: 11.5px; font-weight: 500; color: var(--ink-m);
+  cursor: pointer; transition: color .1s, border-color .1s;
+}
+.tab:hover { color: var(--ink-2); }
+.tab.active { color: var(--ink-1); border-bottom-color: var(--accent); font-weight: 600; }
+#themeBtn {
+  margin-left: auto; margin-right: 10px;
+  background: none; border: 1px solid var(--border); border-radius: 3px;
+  padding: 0 8px; font-size: 10.5px; color: var(--ink-m); cursor: pointer; align-self: center;
+}
+#themeBtn:hover { color: var(--ink-2); border-color: var(--ink-m); }
+
+#wrap {
+  flex: 1; overflow: auto;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 14px; background: var(--page);
+}
+canvas {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+
+/* ── TOOLTIP ── */
+#tip {
+  position: fixed; display: none;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 4px 8px; font-size: 11px; color: var(--ink-2);
+  border-radius: 3px; pointer-events: none; z-index: 200;
+  line-height: 1.6; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+</style>
+
+<aside id="sidebar">
+  <div class="cg">
+    <div class="cl">Color scheme</div>
+    <div class="cr"><label><input type="radio" name="color" value="cat"> Categorical (6 hues)</label></div>
+    <div class="cr"><label><input type="radio" name="color" value="seq"> Sequential (size→blue)</label></div>
+    <div class="cr"><label><input type="radio" name="color" value="mono"> Monochrome</label></div>
+    <div class="cr"><label><input type="radio" name="color" value="pub" checked> Publication (black)</label></div>
+  </div>
+  <div class="cg">
+    <div class="cl">Overlays</div>
+    <div class="cr"><label><input type="checkbox" id="chkPts" checked> Data points</label></div>
+    <div class="cr"><label><input type="checkbox" id="chkPSE" checked> PSE lines</label></div>
+    <div class="cr"><label><input type="checkbox" id="chkThr"> Threshold line</label></div>
+    <div class="cr"><label><input type="checkbox" id="chkBand" checked> Acceptance band</label></div>
+    <div class="cr"><label><input type="checkbox" id="chkVer"> Veridical (100%)</label></div>
+  </div>
+  <div class="cg">
+    <div class="cl">Threshold value</div>
+    <div class="cr"><label><input type="radio" name="thr" value="0.5" checked> P = 0.50</label></div>
+    <div class="cr"><label><input type="radio" name="thr" value="0.7"> P = 0.70</label></div>
+    <div class="cr"><label><input type="radio" name="thr" value="0.75"> P = 0.75</label></div>
+  </div>
+  <div class="cg">
+    <div class="cl">Line width</div>
+    <div class="rrow"><input type="range" id="sLW" min="0.5" max="3.5" step="0.5" value="2.5"><span class="rv" id="vLW">2.5</span></div>
+  </div>
+  <div class="cg">
+    <div class="cl">Marker style</div>
+    <div class="cr"><label><input type="radio" name="mk" value="circle" checked> ● Circle</label></div>
+    <div class="cr"><label><input type="radio" name="mk" value="diamond"> ◆ Diamond</label></div>
+    <div class="cr"><label><input type="radio" name="mk" value="square"> ■ Square</label></div>
+    <div class="cr"><label><input type="radio" name="mk" value="cross"> ✕ Cross</label></div>
+  </div>
+  <div class="cg">
+    <div class="cl">Marker size</div>
+    <div class="rrow"><input type="range" id="sMS" min="2" max="7" step="0.5" value="4"><span class="rv" id="vMS">4</span></div>
+  </div>
+  <div class="cg">
+    <div class="cl">Grid lines</div>
+    <div class="cr"><label><input type="radio" name="grid" value="major" checked> Major only</label></div>
+    <div class="cr"><label><input type="radio" name="grid" value="full"> Full</label></div>
+    <div class="cr"><label><input type="radio" name="grid" value="none"> None</label></div>
+  </div>
+  <div class="cg" id="grpLayout">
+    <div class="cl">Panel layout</div>
+    <div class="cr"><label><input type="radio" name="lay" value="23" checked> 2 col × 3 row</label></div>
+    <div class="cr"><label><input type="radio" name="lay" value="32"> 3 col × 2 row</label></div>
+  </div>
+  <div class="cg">
+    <div class="cl">Font sizes</div>
+    <div style="font-size:9px;color:var(--ink-m);margin-bottom:2px">Title</div>
+    <div class="rrow"><input type="range" id="sFT" min="8" max="28" step="1" value="18"><span class="rv" id="vFT">18</span></div>
+    <div style="font-size:9px;color:var(--ink-m);margin-bottom:2px;margin-top:4px">Axis labels</div>
+    <div class="rrow"><input type="range" id="sFL" min="7" max="22" step="1" value="16"><span class="rv" id="vFL">16</span></div>
+    <div style="font-size:9px;color:var(--ink-m);margin-bottom:2px;margin-top:4px">Tick labels</div>
+    <div class="rrow"><input type="range" id="sFTk" min="6" max="20" step="1" value="16"><span class="rv" id="vFTk">16</span></div>
+  </div>
+</aside>
+
+<div id="content">
+  <div id="topbar">
+    <h1>Psychometric Curves — Study 1</h1>
+    <div class="tabs">
+      <button class="tab active" data-tab="ind">Individual panels</button>
+      <button class="tab" data-tab="comb">Combined (true visual size)</button>
+    </div>
+    <button id="themeBtn">Theme</button>
+  </div>
+  <div id="wrap"><canvas id="chart"></canvas></div>
+</div>
+
+<div id="tip"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const X_OBS = [50, 67.5, 75, 87.5, 100, 125, 150, 175, 200];
+
+const CURVES = [
+  { ps: 20,  pse: 90.1,  w: 36.5, pk: 0.787, y: [0.3667,0.6667,0.7833,0.8167,0.6833,0.4833,0.2667,0.05,  0.0   ] },
+  { ps: 40,  pse: 109.5, w: 30.1, pk: 0.866, y: [0.0333,0.3333,0.45,  0.7167,0.8167,0.7167,0.3833,0.1,   0.05  ] },
+  { ps: 60,  pse: 108.9, w: 29.4, pk: 0.868, y: [0.0333,0.2667,0.4333,0.7705,0.8333,0.6667,0.3667,0.1667,0.05  ] },
+  { ps: 80,  pse: 116.7, w: 36.7, pk: 0.830, y: [0.0167,0.3,   0.4333,0.7167,0.7667,0.7667,0.4833,0.3,   0.2   ] },
+  { ps: 100, pse: 132.0, w: 44.4, pk: 0.980, y: [0.0333,0.2167,0.45,  0.7,   0.85,  0.9492,0.8,   0.6167,0.4098] },
+  { ps: 120, pse: 136.8, w: 55.2, pk: 0.916, y: [0.0,   0.3,   0.55,  0.7667,0.9,   0.9,   0.7,   0.65,  0.6667] },
+];
+
+function bell(x, pse, w, pk) {
+  return pk * Math.exp(-Math.pow(x - pse, 2) / (2 * w * w));
+}
+
+// Pre-generate fine curves (200 pts each)
+CURVES.forEach(c => {
+  c.xf = []; c.yf = []; c.xfTrue = []; c.xTrue = X_OBS.map(x => x * c.ps / 100);
+  for (let i = 0; i < 200; i++) {
+    const x = 50 + 150 * i / 199;
+    c.xf.push(x);
+    c.yf.push(bell(x, c.pse, c.w, c.pk));
+    c.xfTrue.push(x * c.ps / 100);
+  }
+});
+
+// ═══════════════════════════════════════════════
+// COLOR SCHEMES
+// ═══════════════════════════════════════════════
+// Categorical light / dark
+const CAT_L = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300'];
+const CAT_D = ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300'];
+// Sequential ordinal blue (light / dark), ps=20→smallest→lightest
+const SEQ_L = ['#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#1c5cab'];
+const SEQ_D = ['#6da7ec','#5598e7','#3987e5','#2a78d6','#1c5cab','#184f95'];
+// Mono: grayscale steps (light / dark)
+const MONO_L = ['#1a1a18','#3a3a38','#5a5a58','#7a7a78','#3a3a38','#1a1a18'];
+const MONO_D = ['#f5f5f4','#c3c2b7','#a0a09c','#c3c2b7','#f5f5f4','#a0a09c'];
+// Dash patterns for mono/pub
+const DASHES = [[], [7,3], [2,3], [7,3,2,3], [10,3], [4,2,4,2]];
+
+function isDark() {
+  const t = document.documentElement.dataset.theme;
+  if (t === 'dark') return true;
+  if (t === 'light') return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function getCSS(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function getColors() {
+  const d = isDark();
+  const sc = S.color;
+  if (sc === 'cat')  return d ? CAT_D : CAT_L;
+  if (sc === 'seq')  return d ? SEQ_D : SEQ_L;
+  if (sc === 'mono') return d ? MONO_D : MONO_L;
+  // pub: all blue
+  return Array(6).fill(d ? '#3987e5' : '#2a78d6');
+}
+
+function getDash(i) {
+  if (S.color === 'mono') return DASHES[i];
+  // pub = all solid; cat/seq = solid
+  return [];
+}
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const S = {
+  tab:       'ind',
+  color:     'pub',
+  pts:       true,
+  pse:       true,
+  thr:       false,
+  band:      true,
+  verid:     false,
+  thresh:    0.50,
+  lw:        2.5,
+  mk:        'circle',
+  ms:        4,
+  grid:      'major',
+  layout:    '23',
+  fontTitle: 18,
+  fontLabel: 16,
+  fontTick:  16,
+};
+
+// Hit targets for tooltip
+let hits = [];
+
+// ═══════════════════════════════════════════════
+// CANVAS SETUP (HiDPI)
+// ═══════════════════════════════════════════════
+const C = document.getElementById('chart');
+let ctx, dpr;
+
+function initCanvas(cssW, cssH) {
+  dpr = window.devicePixelRatio || 1;
+  C.width  = cssW * dpr;
+  C.height = cssH * dpr;
+  C.style.width  = cssW + 'px';
+  C.style.height = cssH + 'px';
+  ctx = C.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return cssW; // return cssW for convenience
+}
+
+// ═══════════════════════════════════════════════
+// DRAW HELPERS
+// ═══════════════════════════════════════════════
+function marker(cx, cy, style, r, fill, ring) {
+  if (style === 'cross') {
+    ctx.save();
+    ctx.strokeStyle = fill;
+    ctx.lineWidth = Math.max(1, r * 0.4);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy + r);
+    ctx.moveTo(cx + r, cy - r); ctx.lineTo(cx - r, cy + r);
+    ctx.stroke(); ctx.restore(); return;
+  }
+  ctx.save();
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = ring;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (style === 'circle') {
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  } else if (style === 'diamond') {
+    const h = r * 1.35;
+    ctx.moveTo(cx, cy - h); ctx.lineTo(cx + r, cy);
+    ctx.lineTo(cx, cy + h); ctx.lineTo(cx - r, cy);
+    ctx.closePath();
+  } else if (style === 'square') {
+    ctx.rect(cx - r, cy - r, r * 2, r * 2);
+  }
+  ctx.fill(); ctx.stroke(); ctx.restore();
+}
+
+function panelCoords(px, py, pw, ph, padT, padR, padB, padL) {
+  const l = px + padL, r = px + pw - padR;
+  const t = py + padT, b = py + ph - padB;
+  return {
+    l, r, t, b, w: r - l, h: b - t,
+    mX: x  => l + (x - 43) / 164 * (r - l),  // [43,207] gives ~5% margin each side
+    mY: yv => b - yv * (b - t),
+  };
+}
+
+function drawPanelGrid(p, surfColor, gridColor) {
+  if (S.grid === 'none') return;
+  ctx.save();
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([]);
+  const yG = [0, .25, .5, .75, 1];
+  yG.forEach(yv => {
+    ctx.beginPath();
+    ctx.moveTo(p.l, p.mY(yv)); ctx.lineTo(p.r, p.mY(yv)); ctx.stroke();
+  });
+  if (S.grid === 'full') {
+    [50, 75, 100, 125, 150, 175, 200].forEach(x => {
+      ctx.beginPath();
+      ctx.moveTo(p.mX(x), p.t); ctx.lineTo(p.mX(x), p.b); ctx.stroke();
+    });
+  }
+  ctx.restore();
+}
+
+function drawAxesTicks(p, axColor, textColor, showY) {
+  const fs = S.fontTick;
+  ctx.save();
+  ctx.strokeStyle = axColor;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(p.l, p.b); ctx.lineTo(p.r, p.b); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p.l, p.t); ctx.lineTo(p.l, p.b); ctx.stroke();
+  ctx.fillStyle = textColor;
+  ctx.font = `${fs}px system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  [50, 100, 150, 200].forEach(x => {
+    const tx = p.mX(x);
+    ctx.beginPath(); ctx.moveTo(tx, p.b); ctx.lineTo(tx, p.b + 3); ctx.stroke();
+    ctx.fillText(x, tx, p.b + fs + 1);
+  });
+  if (showY !== false) {
+    ctx.textAlign = 'right';
+    [0, .25, .5, .75, 1].forEach(yv => {
+      const ty = p.mY(yv);
+      ctx.beginPath(); ctx.moveTo(p.l - 3, ty); ctx.lineTo(p.l, ty); ctx.stroke();
+      ctx.fillText(yv.toFixed(2), p.l - 5, ty + fs * 0.35);
+    });
+  }
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════
+// INDIVIDUAL PANEL RENDERER
+// ═══════════════════════════════════════════════
+function drawPanel(c, idx, px, py, pw, ph, colors, showY = true) {
+  const dark = isDark();
+  const surf  = dark ? '#1a1a19' : '#ffffff';
+  const ink1  = dark ? '#f5f5f4' : '#0d0d0b';
+  const inkM  = '#898781';
+  const gridC = dark ? '#2c2c2a' : '#ddddd8';
+  const axC   = dark ? '#383835' : '#c0bfba';
+  const col   = colors[idx];
+  const dash  = getDash(idx);
+
+  const PAD = { t: 44, r: 10, b: 26, l: showY ? 42 : 8 };
+  const p = panelCoords(px, py, pw, ph, PAD.t, PAD.r, PAD.b, PAD.l);
+
+  ctx.fillStyle = surf;
+  ctx.fillRect(px, py, pw, ph);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(p.l, p.t, p.w, p.h); ctx.clip();
+
+  drawPanelGrid(p, surf, gridC);
+
+  if (S.thr) {
+    ctx.strokeStyle = inkM; ctx.lineWidth = 0.75; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(p.l, p.mY(S.thresh)); ctx.lineTo(p.r, p.mY(S.thresh)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (S.verid) {
+    ctx.strokeStyle = inkM; ctx.lineWidth = 0.75; ctx.setLineDash([3, 2]);
+    ctx.beginPath(); ctx.moveTo(p.mX(100), p.t); ctx.lineTo(p.mX(100), p.b); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (S.band) {
+    const above = c.xf.filter((x, i) => c.yf[i] >= S.thresh);
+    if (above.length) {
+      const bL = p.mX(Math.min(...above)), bR = p.mX(Math.max(...above));
+      ctx.fillStyle = col + '28';
+      ctx.fillRect(bL, p.t, bR - bL, p.h);
+    }
+  }
+
+  ctx.strokeStyle = col; ctx.lineWidth = S.lw; ctx.setLineDash(dash);
+  ctx.beginPath();
+  c.xf.forEach((x, i) => {
+    const cx2 = p.mX(x), cy2 = p.mY(c.yf[i]);
+    i === 0 ? ctx.moveTo(cx2, cy2) : ctx.lineTo(cx2, cy2);
+  });
+  ctx.stroke(); ctx.setLineDash([]);
+
+  if (S.pse) {
+    ctx.strokeStyle = col; ctx.lineWidth = 0.85; ctx.globalAlpha = 0.65;
+    ctx.beginPath(); ctx.moveTo(p.mX(c.pse), p.t); ctx.lineTo(p.mX(c.pse), p.b); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  if (S.pts) {
+    X_OBS.forEach((x, i) => {
+      const cx2 = p.mX(x), cy2 = p.mY(c.y[i]);
+      marker(cx2, cy2, S.mk, S.ms, col, surf);
+      hits.push({ canvX: cx2, canvY: cy2,
+                  info: `ps=${c.ps}mm · vs=${x}% → P=${c.y[i].toFixed(3)}` });
+    });
+  }
+
+  ctx.restore();
+
+  // Ticks and axis lines
+  drawAxesTicks(p, axC, ink1, showY);
+
+  // Title — left side of top margin
+  ctx.fillStyle = ink1;
+  ctx.font = `bold ${S.fontTitle}px system-ui, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.fillText(`Physical Size: ${c.ps} mm`, p.l + 3, py + 14);
+
+  // PSE label — centered above the PSE line, just above plot top
+  if (S.pse) {
+    ctx.fillStyle = ink1;
+    ctx.font = `${S.fontTick}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`PSE = ${c.pse.toFixed(1)}%`, p.mX(c.pse), p.t - 3);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// COMBINED CHART RENDERER
+// ═══════════════════════════════════════════════
+function drawCombined() {
+  const W = 740, H = 470;
+  initCanvas(W, H);
+  hits = [];
+
+  const dark = isDark();
+  const surf  = dark ? '#1a1a19' : '#ffffff';
+  const ink1  = dark ? '#f5f5f4' : '#0d0d0b';
+  const ink2  = dark ? '#c3c2b7' : '#4e4d4a';
+  const inkM  = '#898781';
+  const gridC = dark ? '#2c2c2a' : '#ddddd8';
+  const axC   = dark ? '#383835' : '#c0bfba';
+  const colors = getColors();
+
+  ctx.fillStyle = surf;
+  ctx.fillRect(0, 0, W, H);
+
+  const PAD = { t: 24, r: 148, b: 52, l: 54 };
+  const l = PAD.l, r = W - PAD.r, t = PAD.t, b = H - PAD.b;
+  const pw2 = r - l, ph2 = b - t;
+
+  // True x range
+  const allXT = CURVES.flatMap(c => c.xfTrue);
+  const XMIN = 0, XMAX = 250;
+
+  const mX = x  => l + (x - XMIN) / (XMAX - XMIN) * pw2;
+  const mY = yv => b - yv * ph2;
+
+  ctx.save(); ctx.beginPath(); ctx.rect(l, t, pw2, ph2); ctx.clip();
+
+  // Grid
+  if (S.grid !== 'none') {
+    ctx.strokeStyle = gridC; ctx.lineWidth = 0.5; ctx.setLineDash([]);
+    const yG = S.grid === 'full' ? [0, .25, .5, .75, 1] : [0, .5, 1];
+    yG.forEach(yv => {
+      ctx.beginPath(); ctx.moveTo(l, mY(yv)); ctx.lineTo(r, mY(yv)); ctx.stroke();
+    });
+    if (S.grid === 'full') {
+      for (let x = 25; x <= XMAX; x += 25) {
+        ctx.beginPath(); ctx.moveTo(mX(x), t); ctx.lineTo(mX(x), b); ctx.stroke();
+      }
+    }
+  }
+
+  // Threshold line
+  if (S.thr) {
+    const ty = mY(S.thresh);
+    ctx.strokeStyle = inkM; ctx.lineWidth = 0.8; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(l, ty); ctx.lineTo(r, ty); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = ink1; ctx.font = `${S.fontTick}px system-ui, sans-serif`; ctx.textAlign = 'left';
+    ctx.fillText(`P = ${S.thresh}`, l + 4, ty - 4);
+  }
+
+  // Acceptance bands
+  if (S.band) {
+    CURVES.forEach((c, i) => {
+      const above = c.xfTrue.filter((x, j) => c.yf[j] >= S.thresh);
+      if (above.length) {
+        const bL = mX(Math.min(...above)), bR = mX(Math.max(...above));
+        ctx.fillStyle = colors[i] + '22';
+        ctx.fillRect(bL, t, bR - bL, ph2);
+      }
+    });
+  }
+
+  // Veridical: vertical at x = ps (where visual = physical)
+  if (S.verid) {
+    CURVES.forEach((c, i) => {
+      ctx.strokeStyle = colors[i]; ctx.lineWidth = 0.7;
+      ctx.globalAlpha = 0.25; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(mX(c.ps), t); ctx.lineTo(mX(c.ps), b); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    });
+  }
+
+  // Bell curves
+  CURVES.forEach((c, i) => {
+    ctx.strokeStyle = colors[i]; ctx.lineWidth = S.lw; ctx.setLineDash(getDash(i));
+    ctx.beginPath();
+    c.xfTrue.forEach((x, j) => {
+      const cx2 = mX(x), cy2 = mY(c.yf[j]);
+      j === 0 ? ctx.moveTo(cx2, cy2) : ctx.lineTo(cx2, cy2);
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  });
+
+  // PSE lines
+  if (S.pse) {
+    CURVES.forEach((c, i) => {
+      const truePS = c.ps * c.pse / 100;
+      ctx.strokeStyle = colors[i]; ctx.lineWidth = 0.85;
+      ctx.globalAlpha = 0.6; ctx.setLineDash([3, 2]);
+      ctx.beginPath(); ctx.moveTo(mX(truePS), t); ctx.lineTo(mX(truePS), b); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    });
+  }
+
+  // Data points
+  if (S.pts) {
+    CURVES.forEach((c, i) => {
+      c.xTrue.forEach((x, j) => {
+        const cx2 = mX(x), cy2 = mY(c.y[j]);
+        marker(cx2, cy2, S.mk, S.ms, colors[i], surf);
+        hits.push({ canvX: cx2, canvY: cy2,
+          info: `ps=${c.ps}mm · vs=${X_OBS[j]}% (${x.toFixed(1)}mm) → P=${c.y[j].toFixed(3)}` });
+      });
+    });
+  }
+
+  ctx.restore();
+
+  // Axes
+  ctx.strokeStyle = axC; ctx.lineWidth = 1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(l, b); ctx.lineTo(r, b); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(l, t); ctx.lineTo(l, b); ctx.stroke();
+
+  // X ticks
+  ctx.fillStyle = ink1; ctx.font = `${S.fontTick}px system-ui, sans-serif`; ctx.textAlign = 'center';
+  const xStep = 25;
+  for (let x = 0; x <= XMAX; x += xStep) {
+    const tx = mX(x);
+    if (tx < l - 2 || tx > r + 2) continue;
+    ctx.beginPath(); ctx.moveTo(tx, b); ctx.lineTo(tx, b + 4); ctx.stroke();
+    ctx.fillText(x, tx, b + S.fontTick + 4);
+  }
+
+  // Y ticks
+  ctx.textAlign = 'right';
+  [0, .25, .5, .75, 1].forEach(yv => {
+    const ty = mY(yv);
+    ctx.beginPath(); ctx.moveTo(l - 4, ty); ctx.lineTo(l, ty); ctx.stroke();
+    ctx.fillText(yv.toFixed(2), l - 6, ty + S.fontTick * 0.35);
+  });
+
+  // Axis labels
+  ctx.fillStyle = ink1; ctx.font = `${S.fontLabel}px system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('True visual size (mm)', l + pw2 / 2, H - 10);
+  ctx.save(); ctx.translate(13, t + ph2 / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('P(congruent)', 0, 0); ctx.restore();
+
+  // Legend
+  const LX = r + 16; let LY = t + 16;
+  CURVES.forEach((c, i) => {
+    const lc = colors[i];
+    ctx.strokeStyle = lc; ctx.lineWidth = S.lw; ctx.setLineDash(getDash(i));
+    ctx.beginPath(); ctx.moveTo(LX, LY); ctx.lineTo(LX + 22, LY); ctx.stroke();
+    ctx.setLineDash([]);
+    if (S.pts) marker(LX + 11, LY, S.mk, Math.min(S.ms, 4), lc, surf);
+    ctx.fillStyle = ink1; ctx.font = `${S.fontLabel}px system-ui, sans-serif`; ctx.textAlign = 'left';
+    ctx.fillText(`${c.ps} mm`, LX + 27, LY + 4);
+    if (S.pse) {
+      const truePS = (c.ps * c.pse / 100).toFixed(0);
+      ctx.fillStyle = ink1; ctx.font = `${S.fontTick}px system-ui, sans-serif`;
+      ctx.fillText(`PSE=${truePS}`, LX + 27, LY + S.fontTick + 3);
+    }
+    LY += S.pse ? S.fontLabel + 18 : S.fontLabel + 10;
+  });
+
+  // Chart title
+  ctx.fillStyle = ink1; ctx.font = `bold ${S.fontTitle}px system-ui, sans-serif`; ctx.textAlign = 'left';
+  ctx.fillText('Acceptance curves — all physical sizes', l, t + S.fontTitle + 2);
+}
+
+// ═══════════════════════════════════════════════
+// INDIVIDUAL VIEW RENDERER
+// ═══════════════════════════════════════════════
+function drawIndividual() {
+  const cols = S.layout === '23' ? 2 : 3;
+  const rows = S.layout === '23' ? 3 : 2;
+  const CW = S.layout === '23' ? 300 : 280;
+  const CH = S.layout === '23' ? 235 : 255;
+  const GAP = 12, OUTER = 10;
+  const HEADER = 28;
+  const YLABEL_W = 30;
+  const XLABEL_H = 22;
+  const W = YLABEL_W + OUTER + CW * cols + GAP * (cols - 1) + OUTER;
+  const H = HEADER + OUTER + CH * rows + GAP * (rows - 1) + OUTER + XLABEL_H;
+
+  initCanvas(W, H);
+  hits = [];
+
+  const dark = isDark();
+  const surf  = dark ? '#111114' : '#ffffff';
+  const ink1  = dark ? '#f5f5f4' : '#0d0d0b';
+  ctx.fillStyle = surf;
+  ctx.fillRect(0, 0, W, H);
+
+  const colors = getColors();
+  const panelsTop  = HEADER + OUTER;
+  const panelsLeft = YLABEL_W + OUTER;
+  CURVES.forEach((c, idx) => {
+    const col = idx % cols, row = Math.floor(idx / cols);
+    const px = panelsLeft + col * (CW + GAP);
+    const py = panelsTop  + row * (CH + GAP);
+    drawPanel(c, idx, px, py, CW, CH, colors, col === 0);
+  });
+
+  // Single y-axis label — centered over all rows
+  const panelsH = CH * rows + GAP * (rows - 1);
+  ctx.save();
+  ctx.translate(YLABEL_W / 2, panelsTop + panelsH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = ink1;
+  ctx.font = `${S.fontLabel}px system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('P(congruent)', 0, 0);
+  ctx.restore();
+
+  // Single x-axis label — centered over all columns
+  const panelsW = CW * cols + GAP * (cols - 1);
+  ctx.fillStyle = ink1;
+  ctx.font = `${S.fontLabel}px system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Relative visual size (%)', panelsLeft + panelsW / 2, H - 5);
+
+  // Acceptance band legend — lower-right, same baseline as x-axis label
+  if (S.band) {
+    const col0 = getColors()[0];
+    const txt = `P ≥ ${S.thresh}`;
+    ctx.font = `${S.fontTick}px system-ui, sans-serif`;
+    const txtW = ctx.measureText(txt).width;
+    const lx = W - OUTER;
+    const ly = H - 5;
+    ctx.fillStyle = col0 + '28';
+    ctx.fillRect(lx - txtW - 14, ly - S.fontTick + 2, 12, S.fontTick - 1);
+    ctx.fillStyle = ink1;
+    ctx.textAlign = 'right';
+    ctx.fillText(txt, lx, ly);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RENDER DISPATCH
+// ═══════════════════════════════════════════════
+function render() {
+  if (S.tab === 'ind') drawIndividual();
+  else drawCombined();
+}
+
+// ═══════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════
+const tip = document.getElementById('tip');
+const wrap = document.getElementById('wrap');
+
+C.addEventListener('mousemove', e => {
+  const rect = C.getBoundingClientRect();
+  // Map CSS coords
+  const mx = (e.clientX - rect.left);
+  const my = (e.clientY - rect.top);
+  const R2 = (S.ms + 5) * (S.ms + 5);
+  let found = null;
+  for (const h of hits) {
+    const dx = mx - h.canvX, dy = my - h.canvY;
+    if (dx * dx + dy * dy < R2) { found = h; break; }
+  }
+  if (found) {
+    tip.style.display = 'block';
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top  = (e.clientY - 10) + 'px';
+    tip.textContent = found.info;
+  } else {
+    tip.style.display = 'none';
+  }
+});
+
+C.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+
+// ═══════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════
+document.querySelectorAll('input[name="color"]').forEach(el => {
+  el.addEventListener('change', e => { S.color = e.target.value; render(); });
+});
+['chkPts','chkPSE','chkThr','chkBand','chkVer'].forEach((id, i) => {
+  const keys = ['pts','pse','thr','band','verid'];
+  document.getElementById(id).addEventListener('change', e => {
+    S[keys[i]] = e.target.checked; render();
+  });
+});
+document.querySelectorAll('input[name="thr"]').forEach(el => {
+  el.addEventListener('change', e => { S.thresh = parseFloat(e.target.value); render(); });
+});
+const sLW = document.getElementById('sLW'), vLW = document.getElementById('vLW');
+sLW.addEventListener('input', e => { S.lw = parseFloat(e.target.value); vLW.textContent = e.target.value; render(); });
+document.querySelectorAll('input[name="mk"]').forEach(el => {
+  el.addEventListener('change', e => { S.mk = e.target.value; render(); });
+});
+const sMS = document.getElementById('sMS'), vMS = document.getElementById('vMS');
+sMS.addEventListener('input', e => { S.ms = parseFloat(e.target.value); vMS.textContent = e.target.value; render(); });
+document.querySelectorAll('input[name="grid"]').forEach(el => {
+  el.addEventListener('change', e => { S.grid = e.target.value; render(); });
+});
+document.querySelectorAll('input[name="lay"]').forEach(el => {
+  el.addEventListener('change', e => { S.layout = e.target.value; render(); });
+});
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', e => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    S.tab = e.target.dataset.tab;
+    document.getElementById('grpLayout').style.display = S.tab === 'ind' ? '' : 'none';
+    render();
+  });
+});
+
+// Font size controls
+[['sFT','vFT','fontTitle'],['sFL','vFL','fontLabel'],['sFTk','vFTk','fontTick']].forEach(([sid,vid,key]) => {
+  const sl = document.getElementById(sid), vl = document.getElementById(vid);
+  sl.addEventListener('input', e => { S[key] = parseInt(e.target.value); vl.textContent = e.target.value; render(); });
+});
+
+// Theme toggle
+let manualTheme = null;
+function toggleTheme() {
+  const root = document.documentElement;
+  const now = isDark();
+  root.dataset.theme = now ? 'light' : 'dark';
+  render();
+}
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+// Dark mode OS change
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (!document.documentElement.dataset.theme) render();
+});
+
+// Initial render — force light/white background by default
+document.documentElement.dataset.theme = 'light';
+render();
+</script>
