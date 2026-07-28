@@ -8,8 +8,8 @@ import os
 import numpy as np
 
 # Load data
-P_THRESHOLD = 0.7
-pids = [1,2,3,4,5,6]
+P_THRESHOLD = 0.5
+pids = [1,2,3,4,5,6,7,8]
 
 all_trials = []
 all_data = []
