@@ -186,10 +186,9 @@ def summarise_pse(curve_results):
             "PSE": r["pse"],
             "PSE_SE": r["pse_se"],
             "bias": r["bias"],
-            "width_70": r["width_70"],
-            "width_75": r["width_75"],
-            "lower_70": r["lower_70"],
-            "upper_70": r["upper_70"],
+            "width_50": r["upper_50"] - r["lower_50"],
+            "lower_50": r["lower_50"],
+            "upper_50": r["upper_50"],
         })
     df = pd.DataFrame(rows)
     print("\nPSE Summary (veridical = 100):")
@@ -394,46 +393,80 @@ def run_glmm_pymer4(data):
 # 7. PLOTTING
 # =============================================================================
 
-def plot_psychometric_curves(curve_results, save_path="psychometric_curves.png"):
+def plot_psychometric_curves(curve_results, save_path="psychometric_curves.png",
+                              font_title=14, font_label=12, font_tick=11,
+                              font_annot=11, font_legend=11):
+    import matplotlib.patches as mpatches
+
+    P_THRESH = 0.50
+    BLACK = '#0d0d0b'
+    MUTED = '#888784'
+
     phys_sizes = [ps for ps, r in curve_results.items() if r is not None]
     n = len(phys_sizes)
-    ncols = 3
+    ncols = 2
     nrows = int(np.ceil(n / ncols))
 
-    fig, axes = plt.subplots(nrows, ncols, figsize=(14, 4 * nrows),
-                             sharex=False, sharey=True)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(12, 5.5 * nrows),
+                             sharex=False, sharey=False)
+    fig.patch.set_facecolor('white')
     axes = axes.flatten()
-    colors = cm.viridis(np.linspace(0.15, 0.85, n))
 
     for i, ps in enumerate(phys_sizes):
         r = curve_results[ps]
         ax = axes[i]
+        ax.set_facecolor('white')
 
-        ax.scatter(r["x"], r["y"], color=colors[i], zorder=5, s=60, label="Observed")
-        ax.plot(r["x_fine"], r["y_fine"], color=colors[i], lw=2)
-        ax.axvline(r["pse"], color=colors[i], lw=1.5, linestyle="--",
-                   alpha=0.8, label=f"PSE={r['pse']:.1f}")
-        ax.axvline(100, color="gray", lw=1, linestyle=":", alpha=0.6,
-                   label="Veridical (100)")
-        if not np.isnan(r["lower_70"]):
-            ax.axvspan(r["lower_70"], r["upper_70"], alpha=0.12,
-                       color=colors[i], label="70% zone")
-        ax.axhline(0.5, color="gray", lw=0.8, linestyle=":", alpha=0.5)
-        ax.axhline(0.7, color="gray", lw=0.8, linestyle="-.", alpha=0.4)
-        ax.set_title(f"Physical size = {ps:.0f}", fontsize=11)
-        ax.set_xlabel("Visual multiplier (%)")
-        ax.set_ylabel("P(yes — match)")
-        ax.set_ylim(-0.05, 1.05)
-        ax.legend(fontsize=7, loc="upper left")
-        ax.grid(True, alpha=0.3)
+        # Acceptance band (P >= 0.75)
+        lo, hi = r["lower_50"], r["upper_50"]
+        if not np.isnan(lo):
+            ax.axvspan(lo, hi, alpha=0.14, color=BLACK)
+
+        # Fitted bell curve - solid
+        ax.plot(r["x_fine"], r["y_fine"], color=BLACK, lw=1.5)
+
+        # Threshold horizontal guide
+        ax.axhline(P_THRESH, color=MUTED, lw=0.75, linestyle='--', alpha=0.55)
+
+        # PSE vertical line - solid
+        ax.axvline(r["pse"], color=BLACK, lw=0.9, alpha=0.45)
+
+        # Observed data points
+        ax.scatter(r["x"], r["y"], color=BLACK, s=50, zorder=5)
+
+        ax.set_title(f"{ps:.0f} mm",
+                     fontsize=font_title, fontweight='bold', loc='left')
+        ax.text(r["pse"], 1.02, f"PSE = {r['pse']:.1f}%",
+                transform=ax.get_xaxis_transform(),
+                ha='center', va='bottom', fontsize=font_annot, color=MUTED,
+                clip_on=False)
+
+        ax.set_xlabel("Visual size (%)", fontsize=font_label)
+        ax.set_ylabel("P(congruent)", fontsize=font_label)
+        ax.set_ylim(-0.02, 1.05)
+        ax.set_xlim(40, 210)
+        ax.set_xticks([50, 100, 150, 200])
+        ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
+        ax.tick_params(labelsize=font_tick)
+
+        ax.yaxis.grid(True, linestyle='-', linewidth=0.4, alpha=0.25)
+        ax.set_axisbelow(True)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_alpha(0.35)
+        ax.spines['bottom'].set_alpha(0.35)
 
     for j in range(i + 1, len(axes)):
         axes[j].set_visible(False)
 
-    fig.suptitle("Psychometric curves per physical size\n"
-                 "(group-level proportions, bell curve fit)", fontsize=13, y=1.01)
-    plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    band_patch = mpatches.Patch(facecolor=BLACK, alpha=0.14, edgecolor='none',
+                                 label=f'Acceptance band  P ≥ {P_THRESH}')
+    fig.legend(handles=[band_patch], fontsize=font_legend,
+               loc='upper right', bbox_to_anchor=(0.99, 0.99),
+               bbox_transform=fig.transFigure, frameon=False)
+
+    plt.tight_layout(pad=0.8, h_pad=1.2, w_pad=1.2, rect=[0, 0, 1, 0.97])
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
     print(f"\nSaved: {save_path}")
     plt.close()
 
