@@ -2571,6 +2571,34 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3887819867191740198, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
+      propertyPath: zipFileExtension
+      value: .glb
+      objectReference: {fileID: 0}
+    - target: {fileID: 3887819867191740198, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
+      propertyPath: zipPostfixDefault
+      value: Quest
+      objectReference: {fileID: 0}
+    - target: {fileID: 3887819867191740198, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
+      propertyPath: _preloadZipFiles.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3887819867191740198, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
+      propertyPath: '_preloadZipFiles.Array.data[0]'
+      value: SampleAssets/PresetAvatars
+      objectReference: {fileID: 0}
+    - target: {fileID: 3887819867191740198, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
+      propertyPath: '_preloadZipFiles.Array.data[1]'
+      value: Oculus
+      objectReference: {fileID: 0}
+    - target: {fileID: 3887819867191740198, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
+      propertyPath: _preloadUniversalZipFiles.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3887819867191740198, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
+      propertyPath: '_preloadUniversalZipFiles.Array.data[0]'
+      value: Oculus/OvrAvatar2Assets.zip
+      objectReference: {fileID: 0}
     - target: {fileID: 3887819867191740199, guid: 8d8b50752af2ea347aab6ca42fb61c76, type: 3}
       propertyPath: m_LocalPosition.x
       value: -9.920001
